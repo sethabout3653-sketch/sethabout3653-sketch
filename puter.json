@@ -1,0 +1,11 @@
+{
+    "name": "Browser In Browser Engine",
+    "version": "1.0.0",
+    "description": "A lightweight tabbed mock browser utilizing Puter hosting environment runtime interfaces.",
+    "main": "index.html",
+    "runtime": "html",
+    "csp": {
+        "script-src": ["'self'", "https://js.puter.com"],
+        "frame-src": ["*"]
+    }
+}
