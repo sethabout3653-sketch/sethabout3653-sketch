@@ -3,11 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebSpace - Browser in Browser</title>
-    <link rel="stylesheet" href="style.css">
+    <title>WebSpace - In-Browser Sandbox</title>
     <script src="https://js.puter.com/v2/"></script>
+    <style>
+        :root {
+            --bg-color: #1e1e2e;
+            --browser-nav: #2b2b3a;
+            --tab-active: #32324d;
+            --tab-inactive: #232334;
+            --text-main: #cdd6f4;
+            --text-muted: #7f849c;
+            --border-color: #45475a;
+            --accent: #89b4fa;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #11111b;
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #browser-container {
+            width: 95vw;
+            height: 90vh;
+            background-color: var(--bg-color);
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        #tab-bar {
+            background-color: var(--tab-inactive);
+            display: flex;
+            align-items: center;
+            padding: 8px 16px 0 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .window-dots {
+            display: flex;
+            gap: 8px;
+            margin-right: 16px;
+            padding-bottom: 8px;
+        }
+
+        .window-dots .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .dot.red { background-color: #f38ba8; }
+        .dot.yellow { background-color: #f9e2af; }
+        .dot.green { background-color: #a6e3a1; }
+
+        #tabs-wrapper {
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+        }
+
+        .tab {
+            background-color: var(--tab-inactive);
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: 8px 8px 0 0;
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            max-width: 150px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tab.active {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-weight: bold;
+        }
+
+        .close-tab {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        #new-tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-main);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 12px;
+            margin-bottom: 6px;
+        }
+
+        #nav-bar {
+            background-color: var(--browser-nav);
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-buttons button {
+            background: none;
+            border: none;
+            color: var(--text-main);
+            font-size: 16px;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+
+        .address-bar-container {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 6px 12px;
+        }
+
+        .security-lock { margin-right: 8px; font-size: 14px; }
+
+        #url-input {
+            width: 100%;
+            background: none;
+            border: none;
+            color: var(--text-main);
+            font-size: 14px;
+            outline: none;
+        }
+
+        #view-port {
+            flex-grow: 1;
+            background-color: #fff;
+            position: relative;
+        }
+
+        .web-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none;
+        }
+
+        .web-frame.active { display: block; }
+
+        .sandbox-notice {
+            background-color: #181825;
+            color: var(--text-main);
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .sandbox-notice h2 { color: #f9e2af; margin-bottom: 12px; }
+        .sandbox-notice p { max-width: 500px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
+        .url-display { font-family: monospace; background: #313244; padding: 4px 8px; border-radius: 4px; color: #a6e3a1; }
+        .suggestion-box { display: flex; gap: 10px; margin-top: 15px; }
+        .suggest-btn { background: #313244; color: white; border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+        .suggest-btn:hover { background: var(--accent); color: #11111b; }
+    </style>
 </head>
 <body>
+
     <div id="browser-container">
         <header id="tab-bar">
             <div class="window-dots">
@@ -15,27 +202,153 @@
                 <span class="dot yellow"></span>
                 <span class="dot green"></span>
             </div>
-            <div id="tabs-wrapper">
-                </div>
+            <div id="tabs-wrapper"></div>
             <button id="new-tab-btn">+</button>
         </header>
 
         <nav id="nav-bar">
             <div class="nav-buttons">
-                <button id="back-btn" disabled>←</button>
-                <button id="forward-btn" disabled>→</button>
-                <button id="refresh-btn">↻</button>
+                <button onclick="refreshActiveTab()">↻</button>
             </div>
             <div class="address-bar-container">
                 <span class="security-lock">🔒</span>
-                <input type="text" id="url-input" placeholder="Search or enter website URL (e.g., wikipedia.org)">
+                <input type="text" id="url-input" placeholder="Type a website address and hit Enter...">
             </div>
         </nav>
 
-        <main id="view-port">
-            </main>
+        <main id="view-port"></main>
     </div>
 
-    <script src="app.js"></script>
+    <script>
+        let tabs = [];
+        let activeTabId = null;
+
+        const viewPort = document.getElementById('view-port');
+        const tabsWrapper = document.getElementById('tabs-wrapper');
+        const urlInput = document.getElementById('url-input');
+        const newTabBtn = document.getElementById('new-tab-btn');
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // Setup initial default tab
+            createNewTab("https://puter.com");
+            
+            newTabBtn.addEventListener('click', () => createNewTab("about:blank"));
+            urlInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') navigateTo(urlInput.value);
+            });
+        });
+
+        function createNewTab(url) {
+            const tabId = 'tab-' + Date.now();
+            const formatted = formatUrl(url);
+
+            const newTab = {
+                id: tabId,
+                url: formatted,
+                title: "Loading..."
+            };
+
+            tabs.push(newTab);
+            buildFrame(newTab);
+            switchTab(tabId);
+        }
+
+        function formatUrl(url) {
+            if (url === "about:blank" || url === "") return "about:blank";
+            if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+            return url;
+        }
+
+        function buildFrame(tab) {
+            // Check if the site explicitly blocks frames via security headers
+            const blocksFrames = !['puter.com', 'wikipedia.org', 'archive.org', 'about:blank'].some(d => tab.url.includes(d));
+
+            if (blocksFrames && tab.url !== "about:blank") {
+                const notice = document.createElement('div');
+                notice.className = 'web-frame sandbox-notice';
+                notice.id = `frame-${tab.id}`;
+                notice.innerHTML = `
+                    <h2>🔒 Direct Frame Blocked</h2>
+                    <p>Websites like GitHub and Google use strict security protocols (<code>X-Frame-Options</code>) preventing them from rendering directly inside an inline frame.</p>
+                    <p>Current Target: <span class="url-display">${tab.url}</span></p>
+                    <p>Try testing with these open-frame friendly domains:</p>
+                    <div class="suggestion-box">
+                        <button class="suggest-btn" onclick="navigateTo('puter.com')">Puter.com</button>
+                        <button class="suggest-btn" onclick="navigateTo('wikipedia.org')">Wikipedia</button>
+                    </div>
+                `;
+                tab.title = "Security Bypass";
+                viewPort.appendChild(notice);
+            } else {
+                const iframe = document.createElement('iframe');
+                iframe.className = 'web-frame';
+                iframe.id = `frame-${tab.id}`;
+                iframe.src = tab.url === "about:blank" ? 'about:blank' : tab.url;
+                iframe.addEventListener('load', () => {
+                    tab.title = tab.url === "about:blank" ? "New Tab" : tab.url.replace('https://','').split('/')[0];
+                    renderTabsUI();
+                });
+                viewPort.appendChild(iframe);
+            }
+            renderTabsUI();
+        }
+
+        function switchTab(tabId) {
+            activeTabId = tabId;
+            const tab = tabs.find(t => t.id === tabId);
+            
+            document.querySelectorAll('.web-frame').forEach(f => f.classList.remove('active'));
+            const targetFrame = document.getElementById(`frame-${tabId}`);
+            if (targetFrame) targetFrame.classList.add('active');
+
+            urlInput.value = tab.url === "about:blank" ? "" : tab.url;
+            renderTabsUI();
+        }
+
+        function closeTab(e, tabId) {
+            e.stopPropagation();
+            tabs = tabs.filter(t => t.id !== tabId);
+            document.getElementById(`frame-${tabId}`)?.remove();
+
+            if (activeTabId === tabId && tabs.length > 0) {
+                switchTab(tabs[tabs.length - 1].id);
+            } else if (tabs.length === 0) {
+                createNewTab("about:blank");
+            } else {
+                renderTabsUI();
+            }
+        }
+
+        function navigateTo(url) {
+            if (!activeTabId) return;
+            const tab = tabs.find(t => t.id === activeTabId);
+            tab.url = formatUrl(url);
+
+            document.getElementById(`frame-${activeTabId}`)?.remove();
+            buildFrame(tab);
+            switchTab(activeTabId);
+        }
+
+        function refreshActiveTab() {
+            if (activeTabId) {
+                const tab = tabs.find(t => t.id === activeTabId);
+                navigateTo(tab.url);
+            }
+        }
+
+        function renderTabsUI() {
+            tabsWrapper.innerHTML = '';
+            tabs.forEach(tab => {
+                const el = document.createElement('div');
+                el.className = `tab ${tab.id === activeTabId ? 'active' : ''}`;
+                el.innerHTML = `
+                    <span>${tab.title}</span>
+                    <button class="close-tab" onclick="closeTab(event, '${tab.id}')">×</button>
+                `;
+                el.addEventListener('click', () => switchTab(tab.id));
+                tabsWrapper.appendChild(el);
+            });
+        }
+    </script>
 </body>
 </html>
