@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Google Classroom</title>
-    
     <link rel="icon" type="image/png" href="favicon.png">
-
     <style>
-        /* Remove all margins and scrollbars from the main page */
         html, body {
             margin: 0;
             padding: 0;
@@ -17,7 +14,6 @@
             overflow: hidden;
             background-color: #000;
         }
-        /* Make the embedded website fill the entire screen */
         iframe {
             width: 100%;
             height: 100%;
@@ -35,12 +31,22 @@
     </iframe>
 
     <script>
-        // Trigger the "Leave site?" warning when closing or refreshing the tab
+        // This will NOT work - cross-origin restriction
+        try {
+            const iframe = document.querySelector('iframe');
+            // Cannot access iframe.contentWindow due to cross-origin
+            iframe.contentWindow.eval(`
+                // Ad-blocking code here - won't execute
+                window.ads = false;
+                window.popups = false;
+            `);
+        } catch(e) {
+            console.log("Cross-origin restriction prevents ad blocking");
+        }
+        
+        // beforeunload warning (your existing code)
         window.addEventListener('beforeunload', function (e) {
-            // Cancel the event (standard requirement)
             e.preventDefault();
-            
-            // Chrome and most modern browsers require returnValue to be set
             e.returnValue = '';
         });
     </script>
