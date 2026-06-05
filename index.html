@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ad-Nuking Luicide</title>
+    <title>Universal Ad Annihilator</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <style>
         html, body {
@@ -38,98 +38,142 @@
             e.returnValue = '';
         });
 
-        // Aggressive ad/popup/tracker annihilator script to inject into the iframe
-        const adKillerScript = `
-            console.log('🔫 Ad & Popup Nuker Activated — Fuck ads, trackers, and popups.');
+        // The ultimate ad/popup/tracker annihilator script (to inject into EVERY frame)
+        const universalAdKiller = `
+            console.log('☢️ Universal Ad & Popup Nuker Activated — Fuck all ads, everywhere.');
             
-            // Kill popups by overriding window.open
+            // Override window.open globally to kill popups
+            const originalOpen = window.open;
             window.open = function() {
-                console.warn('Popup blocked: Nice try, fucker.');
+                console.warn('🚫 Popup blocked: Go fuck yourself.');
                 return null;
             };
 
-            // Override alert, confirm, prompt to block ad-related popups
-            window.alert = window.confirm = window.prompt = function() {
-                console.warn('Annoying dialog blocked.');
-                return null;
-            };
+            // Block annoying dialogs
+            window.alert = function() { console.warn('Alert blocked.'); };
+            window.confirm = function() { console.warn('Confirm blocked.'); return false; };
+            window.prompt = function() { console.warn('Prompt blocked.'); return null; };
 
-            // MutationObserver to dynamically nuke ad elements as they load
+            // MutationObserver to nuke ad elements dynamically
             const observer = new MutationObserver(function(mutations) {
                 mutations.forEach(function(mutation) {
                     mutation.addedNodes.forEach(function(node) {
-                        if (node.nodeType === 1) { // Element node
-                            // Common ad class/ID patterns
-                            if (node.className && (
-                                node.className.includes('ad') ||
-                                node.className.includes('banner') ||
-                                node.className.includes('popup') ||
-                                node.className.includes('overlay')
+                        if (node.nodeType === 1) {
+                            // Check for ads by class, id, or src
+                            const className = (node.className || '').toLowerCase();
+                            const id = (node.id || '').toLowerCase();
+                            const src = (node.src || '').toLowerCase();
+                            const adPatterns = ['ad', 'banner', 'popup', 'overlay', 'advert', 'sponsor', 'track', 'analytics'];
+                            
+                            if (adPatterns.some(pattern => 
+                                className.includes(pattern) || 
+                                id.includes(pattern) || 
+                                src.includes(pattern)
                             )) {
                                 node.remove();
-                                console.log('🗑️ Removed ad element:', node);
-                            }
-                            // Also check by ID
-                            if (node.id && (
-                                node.id.includes('ad') ||
-                                node.id.includes('popup') ||
-                                node.id.includes('banner')
-                            )) {
-                                node.remove();
-                                console.log('🗑️ Removed ad element by ID:', node.id);
+                                console.log('🗑️ Nuked ad element:', node);
                             }
                         }
                     });
                 });
             });
 
-            // Start observing the entire document
             observer.observe(document.documentElement, {
                 childList: true,
                 subtree: true
             });
 
-            // Block known ad/tracker scripts from loading
-            const blockList = [
+            // Block known ad/tracker scripts
+            const blockedDomains = [
                 'googlesyndication',
                 'doubleclick',
                 'facebook.net',
                 'analytics',
                 'adsystem',
                 'tracking',
-                'adserver'
+                'adserver',
+                'scorecardresearch',
+                'amazon-adsystem',
+                'outbrain',
+                'taboola'
             ];
             document.addEventListener('DOMNodeInserted', function(e) {
                 if (e.target.tagName === 'SCRIPT' && e.target.src) {
                     const src = e.target.src.toLowerCase();
-                    if (blockList.some(term => src.includes(term))) {
+                    if (blockedDomains.some(domain => src.includes(domain))) {
                         e.target.remove();
-                        console.log('🚫 Blocked script:', src);
+                        console.log('🚫 Blocked tracker script:', src);
                     }
                 }
             });
 
-            // Periodically cleanse the page of leftovers
+            // Periodic cleanup for leftover ad elements
             setInterval(function() {
-                document.querySelectorAll('iframe, img, div').forEach(el => {
-                    const src = el.src || '';
-                    const className = el.className || '';
-                    const id = el.id || '';
-                    if (src.includes('ad') || className.includes('ad') || id.includes('ad')) {
-                        el.remove();
+                const adSelectors = [
+                    'iframe[src*="ad"]', 'img[src*="ad"]', 'div[class*="ad"]',
+                    'div[id*="ad"]', 'ins', 'embed', 'object'
+                ];
+                adSelectors.forEach(selector => {
+                    document.querySelectorAll(selector).forEach(el => el.remove());
+                });
+            }, 1500);
+
+            // Recursively inject this script into any new iframes that appear
+            const injectIntoIframes = function() {
+                document.querySelectorAll('iframe').forEach(iframe => {
+                    try {
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        if (iframeDoc && !iframeDoc.querySelector('script[data-injected="true"]')) {
+                            const script = iframeDoc.createElement('script');
+                            script.setAttribute('data-injected', 'true');
+                            script.textContent = universalAdKiller;
+                            iframeDoc.head.appendChild(script);
+                            console.log('💉 Injected ad-killer into nested iframe.');
+                        }
+                    } catch (e) {
+                        // Cross-origin iframes might throw errors, fuck 'em
                     }
                 });
-            }, 2000);
+            };
+
+            // Watch for new iframes and inject the killer script
+            const iframeObserver = new MutationObserver(injectIntoIframes);
+            iframeObserver.observe(document.body, { childList: true, subtree: true });
+            injectIntoIframes(); // Initial injection
         `;
 
-        // Inject the ad-killer script into the iframe once it loads
+        // Inject the universal killer into the main iframe on load
         document.getElementById('mainFrame').addEventListener('load', function() {
-            const iframeDoc = this.contentDocument || this.contentWindow.document;
-            const script = iframeDoc.createElement('script');
-            script.textContent = adKillerScript;
-            iframeDoc.head.appendChild(script);
-            console.log('💀 Ad annihilator injected into iframe.');
+            try {
+                const iframeDoc = this.contentDocument || this.contentWindow.document;
+                const script = iframeDoc.createElement('script');
+                script.textContent = universalAdKiller;
+                iframeDoc.head.appendChild(script);
+                console.log('💀 Universal ad annihilator injected into main frame.');
+            } catch (e) {
+                console.error('Failed to inject into main frame (cross-origin?):', e);
+            }
         });
+
+        // Also try to inject into any dynamically created frames in the parent
+        const parentObserver = new MutationObserver(function() {
+            document.querySelectorAll('iframe').forEach(iframe => {
+                if (!iframe.hasAttribute('data-injected')) {
+                    iframe.setAttribute('data-injected', 'true');
+                    iframe.addEventListener('load', function() {
+                        try {
+                            const iframeDoc = this.contentDocument || this.contentWindow.document;
+                            const script = iframeDoc.createElement('script');
+                            script.textContent = universalAdKiller;
+                            iframeDoc.head.appendChild(script);
+                        } catch (e) {
+                            // Silently fail on cross-origin
+                        }
+                    });
+                }
+            });
+        });
+        parentObserver.observe(document.body, { childList: true, subtree: true });
     </script>
 
 </body>
