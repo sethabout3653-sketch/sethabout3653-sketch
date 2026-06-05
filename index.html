@@ -1,357 +1,41 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Beginner's Guide to the NFL</title>
-    <style>
-        :root {
-            --nfl-blue: #013369;
-            --nfl-red: #D50A0A;
-            --dark-gray: #111111;
-            --light-gray: #f4f4f9;
-            --white: #ffffff;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: var(--light-gray);
-            color: #333;
-            line-height: 1.6;
-        }
-
-        header {
-            background: linear-gradient(135deg, var(--nfl-blue) 70%, var(--nfl-red));
-            color: var(--white);
-            padding: 3rem 1rem;
-            text-align: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-        }
-
-        header h1 {
-            font-size: 2.8rem;
-            margin-bottom: 0.5rem;
-            letter-spacing: 1px;
-        }
-
-        header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
-        }
-
-        nav {
-            background-color: var(--dark-gray);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        nav a {
-            color: var(--white);
-            padding: 1rem 1.5rem;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.95rem;
-            transition: background 0.3s;
-        }
-
-        nav a:hover {
-            background-color: var(--nfl-blue);
-        }
-
-        .container {
-            max-width: 1100px;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
-        }
-
-        section {
-            background: var(--white);
-            padding: 2.5rem;
-            margin-bottom: 2.5rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-
-        section h2 {
-            color: var(--nfl-blue);
-            font-size: 1.8rem;
-            margin-bottom: 1.5rem;
-            border-bottom: 3px solid var(--nfl-red);
-            padding-bottom: 0.5rem;
-            display: inline-block;
-        }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-        }
-
-        .card {
-            background: var(--light-gray);
-            padding: 1.5rem;
-            border-radius: 6px;
-            border-left: 4px solid var(--nfl-blue);
-        }
-
-        .card h3 {
-            margin-bottom: 0.5rem;
-            color: #111;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-
-        table th, table td {
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
-        table th {
-            background-color: var(--nfl-blue);
-            color: var(--white);
-        }
-
-        ul, ol {
-            padding-left: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        li {
-            margin-bottom: 0.5rem;
-        }
-
-        /* Quiz Styling */
-        .quiz-container {
-            background: #eef4fc;
-            border: 2px solid var(--nfl-blue);
-        }
-
-        .quiz-option {
-            display: block;
-            background: var(--white);
-            padding: 0.75rem;
-            margin: 0.5rem 0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .quiz-option:hover {
-            background: #ddd;
-        }
-
-        .btn {
-            background-color: var(--nfl-blue);
-            color: var(--white);
-            border: none;
-            padding: 0.75rem 1.5rem;
-            font-size: 1rem;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 1rem;
-        }
-
-        .btn:hover {
-            background-color: #012244;
-        }
-
-        #quiz-result {
-            margin-top: 1rem;
-            font-weight: bold;
-        }
-
-        footer {
-            background-color: var(--dark-gray);
-            color: var(--white);
-            text-align: center;
-            padding: 1.5rem;
-            margin-top: 4rem;
-            font-size: 0.9rem;
-        }
-
-        @media (max-width: 768px) {
-            header h1 { font-size: 2rem; }
-            section { padding: 1.5rem; }
-        }
-    </style>
+    <title>WebSpace - Browser in Browser</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://js.puter.com/v2/"></script>
 </head>
 <body>
-
-    <header>
-        <h1>The Ultimate NFL Beginner's Guide</h1>
-        <p>Master the basics of American Football, from First Downs to the Super Bowl</p>
-    </header>
-
-    <nav>
-        <a href="#core-concept">Core Concept</a>
-        <a href="#scoring">How Scoring Works</a>
-        <a href="#structure">League Structure</a>
-        <a href="#penalties">Common Penalties</a>
-        <a href="#quiz">Test Your Knowledge</a>
-    </nav>
-
-    <div class="container">
-
-        <!-- Section 1: The Core Concept -->
-        <section id="core-concept">
-            <h2>The Core Objective</h2>
-            <p>The National Football League (NFL) consists of two teams competing to advance an oval-shaped ball down a <strong>100-yard field</strong> into the opponent’s end zone.</p>
-            <br>
-            <div class="grid-2">
-                <div class="card">
-                    <h3>The Main Goal</h3>
-                    <p>The team with possession of the ball (the <strong>Offense</strong>) tries to run or pass the ball forward. The team without the ball (the <strong>Defense</strong>) tries to stop them from advancing.</p>
-                </div>
-                <div class="card">
-                    <h3>The First Down System</h3>
-                    <p>The offense gets <strong>4 chances (called "downs")</strong> to advance the ball at least <strong>10 yards</strong>. If they succeed, they earn a "First Down," resetting the count to 1st down with 4 more chances to get 10 more yards.</p>
-                </div>
+    <div id="browser-container">
+        <header id="tab-bar">
+            <div class="window-dots">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
             </div>
-            <br>
-            <p>If the offense fails to gain 10 yards after 4 downs, the other team gets the ball. Usually, if a team reaches 4th down and is too far away to score, they will <strong>punt</strong> (kick) the ball deep into the opponent's territory to make it harder for them to score when they take over.</p>
-        </section>
-
-        <!-- Section 2: Scoring -->
-        <section id="scoring">
-            <h2>How Scoring Works</h2>
-            <p>While crossing into the opponent's end zone is the ultimate goal, points can be scored in a few different ways:</p>
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th>Scoring Play</th>
-                        <th>Points Provided</th>
-                        <th>Description</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <strong><td>Touchdown (TD)</td></strong>
-                        <strong><td>6 Points</td></strong>
-                        <td>When a player runs the ball into or catches a pass inside the opponent's end zone.</td>
-                    </tr>
-                    <tr>
-                        <td>Extra Point (PAT)</td>
-                        <td>1 Point</td>
-                        <td>A kick through the yellow goalposts immediately following a touchdown.</td>
-                    </tr>
-                    <tr>
-                        <td>Two-Point Conversion</td>
-                        <td>2 Points</td>
-                        <td>An optional play after a touchdown where the offense runs/passes into the end zone from the 2-yard line instead of kicking.</td>
-                    </tr>
-                    <tr>
-                        <td>Field Goal (FG)</td>
-                        <td>3 Points</td>
-                        <td>If the offense gets stuck on 4th down close enough to the end zone, they can kick the ball through the goalposts instead of trying for a touchdown.</td>
-                    </tr>
-                    <tr>
-                        <td>Safety</td>
-                        <td>2 Points</td>
-                        <td>Awarded to the defense if they tackle an offensive player who has the ball inside his own end zone.</td>
-                    </tr>
-                </tbody>
-            </table>
-        </section>
-
-        <!-- Section 3: League Structure -->
-        <section id="structure">
-            <h2>How the League is Structured</h2>
-            <p>The NFL is made up of <strong>32 teams</strong>, split evenly into two major conferences. The season culminates in the famous championship game called the <strong>Super Bowl</strong>.</p>
-            <br>
-            <div class="grid-2">
-                <div class="card" style="border-left-color: #002244;">
-                    <h3>American Football Conference (AFC)</h3>
-                    <p>Contains 16 teams broken up into 4 divisions: North, South, East, and West. Notable teams include the Kansas City Chiefs, Buffalo Bills, and Pittsburgh Steelers.</p>
+            <div id="tabs-wrapper">
                 </div>
-                <div class="card" style="border-left-color: #A71930;">
-                    <h3>National Football Conference (NFC)</h3>
-                    <p>Contains 16 teams also broken up into North, South, East, and West divisions. Notable teams include the Dallas Cowboys, San Francisco 49ers, and Green Bay Packers.</p>
-                </div>
+            <button id="new-tab-btn">+</button>
+        </header>
+
+        <nav id="nav-bar">
+            <div class="nav-buttons">
+                <button id="back-btn" disabled>←</button>
+                <button id="forward-btn" disabled>→</button>
+                <button id="refresh-btn">↻</button>
             </div>
-            <br>
-            <h3>The Season Timeline</h3>
-            <ol>
-                <li><strong>Regular Season:</strong> Each team plays 17 games over an 18-week period spanning from September to January.</li>
-                <li><strong>Playoffs:</strong> 14 teams (7 from the AFC, 7 from the NFC) make it to a single-elimination tournament in January.</li>
-                <li><strong>The Super Bowl:</strong> Held in February, the AFC Champion plays the NFC Champion to crown the ultimate league winner.</li>
-            </ol>
-        </section>
-
-        <!-- Section 4: Common Penalties -->
-        <section id="penalties">
-            <h2>Common Penalties to Know</h2>
-            <p>Yellow flags are thrown onto the field by referees when a rule is broken. Here are the most common calls you'll hear:</p>
-            <ul>
-                <li><strong>False Start (5 Yards):</strong> When an offensive player moves illegally before the ball is snapped (passed backwards to start the play).</li>
-                <li><strong>Holding (10 Yards):</strong> When a player illegally grabs or tackles an opponent who does not have the football.</li>
-                <li><strong>Pass Interference (Spot of the foul):</strong> When a defender tackles or physically blocks a wide receiver from trying to catch a pass before the ball arrives.</li>
-                <li><strong>Face Mask (15 Yards):</strong> Grabbing an opponent's helmet opening during a tackle. This is highly dangerous and penalized heavily.</li>
-            </ul>
-        </section>
-
-        <!-- Section 5: Interactive Quiz -->
-        <section id="quiz" class="quiz-container">
-            <h2>Mini Trivia Challenge</h2>
-            <p>Let's check what you've learned! Select your answer below:</p>
-            <br>
-            <div id="quiz-block">
-                <p><strong>Question: How many downs (chances) does an offense get to advance the ball 10 yards?</strong></p>
-                <label class="quiz-option"><input type="radio" name="q1" value="2"> 2 Downs</label>
-                <label class="quiz-option"><input type="radio" name="q1" value="3"> 3 Downs</label>
-                <label class="quiz-option"><input type="radio" name="q1" value="4"> 4 Downs</label>
-                <label class="quiz-option"><input type="radio" name="q1" value="6"> 6 Downs</label>
-                <button class="btn" onclick="checkAnswer()">Submit Answer</button>
-                <div id="quiz-result"></div>
+            <div class="address-bar-container">
+                <span class="security-lock">🔒</span>
+                <input type="text" id="url-input" placeholder="Search or enter website URL (e.g., wikipedia.org)">
             </div>
-        </section>
+        </nav>
 
+        <main id="view-port">
+            </main>
     </div>
 
-    <footer>
-        <p>&copy; 2026 Gridiron Basics Guide. Built for future football fans.</p>
-    </footer>
-
-    <script>
-        function checkAnswer() {
-            const options = document.getElementsByName('q1');
-            let selectedValue = "";
-            for (const option of options) {
-                if (option.checked) {
-                    selectedValue = option.value;
-                    break;
-                }
-            }
-
-            const resultDiv = document.getElementById('quiz-result');
-            if (selectedValue === "4") {
-                resultDiv.style.color = "green";
-                resultDiv.innerHTML = "🏈 Correct! The offense gets 4 downs to pick up 10 yards. If they reach it, they get a fresh set of downs!";
-            } else if (selectedValue === "") {
-                resultDiv.style.color = "orange";
-                resultDiv.innerHTML = "Please select an answer choice before submitting!";
-            } else {
-                resultDiv.style.color = "var(--nfl-red)";
-                resultDiv.innerHTML = "❌ Not quite! Remember, they get 4 downs to advance those 10 yards before they have to turn over or punt the ball.";
-            }
-        }
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>
