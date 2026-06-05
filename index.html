@@ -1,21 +1,22 @@
-<!DOCTYPE html>
+l<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>In-Browser Web Wrapper</title>
+    <title>Decentralized Web Wrapper</title>
     <style>
         :root {
-            --bg-main: #0f0f14;
-            --bg-browser: #16161f;
-            --bg-toolbar: #22222e;
-            --text-main: #e1e1e6;
-            --border-color: #38384d;
+            --bg-main: #09090e;
+            --bg-browser: #111116;
+            --bg-toolbar: #181822;
+            --text-main: #e3e3e8;
+            --border: #2b2b3c;
+            --accent: #a6e3a1;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: system-ui, -apple-system, sans-serif;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--bg-main);
             color: var(--text-main);
             height: 100vh;
@@ -25,61 +26,59 @@
             overflow: hidden;
         }
 
-        #browser-frame {
+        #browser-window {
             width: 96vw;
             height: 92vh;
             background-color: var(--bg-browser);
+            border: 1px solid var(--border);
             border-radius: 12px;
-            border: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            box-shadow: 0 24px 64px rgba(0,0,0,0.7);
         }
 
         #toolbar {
             background-color: var(--bg-toolbar);
-            padding: 10px 16px;
+            padding: 12px 18px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            border-bottom: 1px solid var(--border-color);
+            gap: 14px;
+            border-bottom: 1px solid var(--border);
         }
 
-        .nav-btn {
-            background: #2d2d3d;
-            border: 1px solid var(--border-color);
+        .btn {
+            background: #222230;
+            border: 1px solid var(--border);
             color: white;
-            padding: 6px 14px;
+            padding: 8px 14px;
             border-radius: 6px;
             cursor: pointer;
-            font-weight: bold;
+            font-size: 14px;
         }
-
-        .nav-btn:hover { background: #44445c; }
+        .btn:hover { background: #2d2d42; }
 
         .address-bar {
             flex-grow: 1;
             display: flex;
             align-items: center;
             background-color: var(--bg-browser);
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--border);
             border-radius: 6px;
-            padding: 6px 12px;
+            padding: 6px 14px;
         }
 
-        .proxy-status {
+        .status-badge {
             font-size: 11px;
-            background-color: #a6e3a1;
+            background-color: var(--accent);
             color: #11111b;
-            padding: 2px 6px;
+            padding: 3px 8px;
             border-radius: 4px;
-            margin-right: 10px;
+            margin-right: 12px;
             font-weight: bold;
-            white-space: nowrap;
         }
 
-        #url-input {
+        #url-field {
             width: 100%;
             background: none;
             border: none;
@@ -88,102 +87,116 @@
             outline: none;
         }
 
-        #viewport-container {
+        #viewport {
             flex-grow: 1;
-            background: #fff;
-            position: relative;
+            background: #ffffff;
         }
 
-        #webview {
+        #webview-frame {
             width: 100%;
             height: 100%;
             border: none;
-            background: #fff;
-        }
-
-        #loading-overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(22, 22, 31, 0.85);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            color: var(--text-main);
+            background: #ffffff;
         }
     </style>
 </head>
 <body>
 
-    <div id="browser-frame">
+    <div id="browser-window">
         <header id="toolbar">
-            <button class="nav-btn" onclick="refreshPage()">↻</button>
+            <button class="btn" onclick="refresh()">↻</button>
             <div class="address-bar">
-                <span class="proxy-status" id="proxy-indicator">CLIENT PROXY ACTIVE</span>
-                <input type="text" id="url-input" placeholder="Enter web address (e.g. github.com) and hit Enter...">
+                <span class="status-badge" id="status">LOCAL WORKER ACTIVE</span>
+                <input type="text" id="url-field" placeholder="Enter target domain (e.g., wikipedia.org) and press Enter...">
             </div>
         </header>
-        <main id="viewport-container">
-            <iframe id="webview"></iframe>
-            <div id="loading-overlay">Rendering unblocked page content...</div>
-        </div>
+        <main id="viewport">
+            <iframe id="webview-frame" src="about:blank"></iframe>
+        </main>
     </div>
 
     <script>
-        const urlInput = document.getElementById('url-input');
-        const webview = document.getElementById('webview');
-        const loader = document.getElementById('loading-overlay');
+        const urlField = document.getElementById('url-field');
+        const frame = document.getElementById('webview-frame');
+        const statusBadge = document.getElementById('status');
 
-        urlInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                navigateTo(urlInput.value);
-            }
+        // Register the inline service worker script compiled dynamically
+        if ('serviceWorker' in navigator) {
+            const workerBlob = new Blob([document.getElementById('worker-code').textContent], { type: 'text/javascript' });
+            const workerURL = URL.createObjectURL(workerBlob);
+            
+            navigator.serviceWorker.register(workerURL, { scope: './' })
+                .then(() => {
+                    statusBadge.textContent = "LOCAL PROXY ARMED";
+                    statusBadge.style.backgroundColor = "#a6e3a1";
+                    navigate('https://wikipedia.org'); // Safe default start point
+                })
+                .catch(err => {
+                    console.error("Worker registration failed:", err);
+                    statusBadge.textContent = "WORKER ERROR";
+                    statusBadge.style.backgroundColor = "#f38ba8";
+                });
+        }
+
+        urlField.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') navigate(urlField.value);
         });
 
-        async function navigateTo(targetUrl) {
-            if (!targetUrl) return;
+        function navigate(targetUrl) {
+            if (!targetUrl.trim()) return;
+
+            let cleanUrl = targetUrl.trim();
+            if (!/^https?:\/\//i.test(cleanUrl)) {
+                cleanUrl = 'https://' + cleanUrl;
+            }
+
+            urlField.value = cleanUrl;
             
-            loader.style.display = 'flex';
-
-            // Ensure uniform protocol structure
-            if (!/^https?:\/\//i.test(targetUrl)) {
-                targetUrl = 'https://' + targetUrl;
-            }
-            urlInput.value = targetUrl;
-
-            try {
-                // Use AllOrigins public worker to fetch the cross-origin source string purely client-side
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-                const response = await fetch(proxyUrl);
-                
-                if (!response.ok) throw new Error('Proxy unreachable');
-                const data = await response.json();
-
-                // Inject the raw web data directly into the iframe window, cleanly avoiding cross-origin header rules
-                const doc = webview.contentWindow.document || webview.contentDocument;
-                doc.open();
-                
-                // Inject a base target reference tag so internal relative links inside GitHub/Wikipedia don't break
-                const baseTag = `<base href="${targetUrl}/" target="_self">`;
-                doc.write(baseTag + data.contents);
-                doc.close();
-
-            } catch (err) {
-                console.error("Proxy Load Error:", err);
-                // Fallback direct load if proxy API hits rate limits
-                webview.src = targetUrl;
-            } finally {
-                loader.style.display = 'none';
-            }
+            // Pass requests to our local running background thread route
+            frame.src = `./local-proxy-route?url=${encodeURIComponent(cleanUrl)}`;
         }
 
-        function refreshPage() {
-            if (urlInput.value) navigateTo(urlInput.value);
+        function refresh() {
+            if (urlField.value) navigate(urlField.value);
         }
+    </script>
 
-        // Default home page on startup
-        window.addEventListener('DOMContentLoaded', () => {
-            navigateTo('https://wikipedia.org');
+    <script id="worker-code" type="text/plain">
+        self.addEventListener('install', event => self.skipWaiting());
+        self.addEventListener('activate', event => event.waitUntil(clients.claim()));
+
+        self.addEventListener('fetch', event => {
+            const requestUrl = new URL(event.request.url);
+            
+            // Intercept our special virtual proxy path route
+            if (requestUrl.pathname.includes('local-proxy-route')) {
+                const target = decodeURIComponent(requestUrl.searchParams.get('url'));
+                
+                event.respondWith(
+                    fetch(target, { mode: 'cors' })
+                        .then(response => {
+                            // Clone original headers but strip the blocking security keys
+                            const cleanHeaders = new Headers(response.headers);
+                            cleanHeaders.delete('x-frame-options');
+                            cleanHeaders.delete('content-security-policy');
+                            cleanHeaders.delete('content-security-policy-report-only');
+                            
+                            // Return the unblocked modified data stream back to the iframe viewport
+                            return response.text().then(htmlString => {
+                                // Inject a programmatic base tag so assets fetch properly
+                                const customBase = `<base href="${target}" target="_self">`;
+                                const modifiedHTML = htmlString.replace('<head>', '<head>' + customBase);
+                                
+                                return new Response(modifiedHTML, {
+                                    status: response.status,
+                                    statusText: response.statusText,
+                                    headers: cleanHeaders
+                                });
+                            });
+                        })
+                        .catch(err => new Response('Network Fetch Intercept Failure: ' + err, { status: 500 }))
+                );
+            }
         });
     </script>
 </body>
