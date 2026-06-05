@@ -1,203 +1,42 @@
-l<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Decentralized Web Wrapper</title>
+    <title>JavaScript + HTML Intro</title>
     <style>
-        :root {
-            --bg-main: #09090e;
-            --bg-browser: #111116;
-            --bg-toolbar: #181822;
-            --text-main: #e3e3e8;
-            --border: #2b2b3c;
-            --accent: #a6e3a1;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
         }
-
-        #browser-window {
-            width: 96vw;
-            height: 92vh;
-            background-color: var(--bg-browser);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            box-shadow: 0 24px 64px rgba(0,0,0,0.7);
-        }
-
-        #toolbar {
-            background-color: var(--bg-toolbar);
-            padding: 12px 18px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .btn {
-            background: #222230;
-            border: 1px solid var(--border);
-            color: white;
-            padding: 8px 14px;
-            border-radius: 6px;
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
             cursor: pointer;
-            font-size: 14px;
-        }
-        .btn:hover { background: #2d2d42; }
-
-        .address-bar {
-            flex-grow: 1;
-            display: flex;
-            align-items: center;
-            background-color: var(--bg-browser);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 6px 14px;
-        }
-
-        .status-badge {
-            font-size: 11px;
-            background-color: var(--accent);
-            color: #11111b;
-            padding: 3px 8px;
-            border-radius: 4px;
-            margin-right: 12px;
-            font-weight: bold;
-        }
-
-        #url-field {
-            width: 100%;
-            background: none;
-            border: none;
-            color: var(--text-main);
-            font-size: 14px;
-            outline: none;
-        }
-
-        #viewport {
-            flex-grow: 1;
-            background: #ffffff;
-        }
-
-        #webview-frame {
-            width: 100%;
-            height: 100%;
-            border: none;
-            background: #ffffff;
         }
     </style>
 </head>
 <body>
 
-    <div id="browser-window">
-        <header id="toolbar">
-            <button class="btn" onclick="refresh()">↻</button>
-            <div class="address-bar">
-                <span class="status-badge" id="status">LOCAL WORKER ACTIVE</span>
-                <input type="text" id="url-field" placeholder="Enter target domain (e.g., wikipedia.org) and press Enter...">
-            </div>
-        </header>
-        <main id="viewport">
-            <iframe id="webview-frame" src="about:blank"></iframe>
-        </main>
-    </div>
+    <h1>Welcome to My Page</h1>
+    <p id="message">Click the button below to see some JavaScript magic.</p>
+    
+    <button id="magicButton">Click Me!</button>
 
     <script>
-        const urlField = document.getElementById('url-field');
-        const frame = document.getElementById('webview-frame');
-        const statusBadge = document.getElementById('status');
+        // 1. Find the elements in the HTML
+        const button = document.getElementById('magicButton');
+        const text = document.getElementById('message');
 
-        // Register the inline service worker script compiled dynamically
-        if ('serviceWorker' in navigator) {
-            const workerBlob = new Blob([document.getElementById('worker-code').textContent], { type: 'text/javascript' });
-            const workerURL = URL.createObjectURL(workerBlob);
-            
-            navigator.serviceWorker.register(workerURL, { scope: './' })
-                .then(() => {
-                    statusBadge.textContent = "LOCAL PROXY ARMED";
-                    statusBadge.style.backgroundColor = "#a6e3a1";
-                    navigate('https://wikipedia.org'); // Safe default start point
-                })
-                .catch(err => {
-                    console.error("Worker registration failed:", err);
-                    statusBadge.textContent = "WORKER ERROR";
-                    statusBadge.style.backgroundColor = "#f38ba8";
-                });
-        }
-
-        urlField.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') navigate(urlField.value);
-        });
-
-        function navigate(targetUrl) {
-            if (!targetUrl.trim()) return;
-
-            let cleanUrl = targetUrl.trim();
-            if (!/^https?:\/\//i.test(cleanUrl)) {
-                cleanUrl = 'https://' + cleanUrl;
-            }
-
-            urlField.value = cleanUrl;
-            
-            // Pass requests to our local running background thread route
-            frame.src = `./local-proxy-route?url=${encodeURIComponent(cleanUrl)}`;
-        }
-
-        function refresh() {
-            if (urlField.value) navigate(urlField.value);
-        }
-    </script>
-
-    <script id="worker-code" type="text/plain">
-        self.addEventListener('install', event => self.skipWaiting());
-        self.addEventListener('activate', event => event.waitUntil(clients.claim()));
-
-        self.addEventListener('fetch', event => {
-            const requestUrl = new URL(event.request.url);
-            
-            // Intercept our special virtual proxy path route
-            if (requestUrl.pathname.includes('local-proxy-route')) {
-                const target = decodeURIComponent(requestUrl.searchParams.get('url'));
-                
-                event.respondWith(
-                    fetch(target, { mode: 'cors' })
-                        .then(response => {
-                            // Clone original headers but strip the blocking security keys
-                            const cleanHeaders = new Headers(response.headers);
-                            cleanHeaders.delete('x-frame-options');
-                            cleanHeaders.delete('content-security-policy');
-                            cleanHeaders.delete('content-security-policy-report-only');
-                            
-                            // Return the unblocked modified data stream back to the iframe viewport
-                            return response.text().then(htmlString => {
-                                // Inject a programmatic base tag so assets fetch properly
-                                const customBase = `<base href="${target}" target="_self">`;
-                                const modifiedHTML = htmlString.replace('<head>', '<head>' + customBase);
-                                
-                                return new Response(modifiedHTML, {
-                                    status: response.status,
-                                    statusText: response.statusText,
-                                    headers: cleanHeaders
-                                });
-                            });
-                        })
-                        .catch(err => new Response('Network Fetch Intercept Failure: ' + err, { status: 500 }))
-                );
-            }
+        // 2. Listen for a click event on the button
+        button.addEventListener('click', () => {
+            // 3. Change the text content when clicked
+            text.textContent = "🎉 Ta-da! JavaScript just changed this text!";
+            text.style.color = "blue";
+            text.style.fontWeight = "bold";
         });
     </script>
+
 </body>
 </html>
