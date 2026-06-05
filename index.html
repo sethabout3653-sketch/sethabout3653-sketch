@@ -31,20 +31,7 @@
     </iframe>
 
     <script>
-        // This will NOT work - cross-origin restriction
-        try {
-            const iframe = document.querySelector('iframe');
-            // Cannot access iframe.contentWindow due to cross-origin
-            iframe.contentWindow.eval(`
-                // Ad-blocking code here - won't execute
-                window.ads = false;
-                window.popups = false;
-            `);
-        } catch(e) {
-            console.log("Cross-origin restriction prevents ad blocking");
-        }
-        
-        // beforeunload warning (your existing code)
+        // Warns the user before accidentally closing the "Classroom" tab
         window.addEventListener('beforeunload', function (e) {
             e.preventDefault();
             e.returnValue = '';
