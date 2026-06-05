@@ -1,0 +1,5 @@
+{
+  "site_name": "In-Browser Proxy Simulation",
+  "use_custom_viewport": true,
+  "permissions": ["https://api.allorigins.win/*"]
+}
