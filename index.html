@@ -3,40 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JavaScript + HTML Intro</title>
+    <title>PlayerNation</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin-top: 50px;
+        /* Remove all margins and scrollbars from the main page */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
         }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
+        /* Make the embedded website fill the entire screen */
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
         }
     </style>
 </head>
 <body>
 
-    <h1>Welcome to My Page</h1>
-    <p id="message">Click the button below to see some JavaScript magic.</p>
-    
-    <button id="magicButton">Click Me!</button>
-
-    <script>
-        // 1. Find the elements in the HTML
-        const button = document.getElementById('magicButton');
-        const text = document.getElementById('message');
-
-        // 2. Listen for a click event on the button
-        button.addEventListener('click', () => {
-            // 3. Change the text content when clicked
-            text.textContent = "🎉 Ta-da! JavaScript just changed this text!";
-            text.style.color = "blue";
-            text.style.fontWeight = "bold";
-        });
-    </script>
+    <!-- 
+      The 'sandbox' attribute helps with security and can stop 
+      the embedded site from opening annoying popups.
+    -->
+    <iframe 
+        src="https://playernation.greenbaynz" 
+        sandbox="allow-scripts allow-same-origin allow-forms"
+        allow="fullscreen">
+    </iframe>
 
 </body>
 </html>
