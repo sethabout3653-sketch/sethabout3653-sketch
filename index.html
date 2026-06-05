@@ -3,9 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PlayerNation</title>
+    <title>Google Classroom</title>
+    
+    <!-- Favicon Support for GitHub Pages -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+
     <style>
-        /* Remove all margins and scrollbars from the main page */
+        /* Reset margins and hide scrollbars to ensure a full-screen embed */
         html, body {
             margin: 0;
             padding: 0;
@@ -14,7 +19,7 @@
             overflow: hidden;
             background-color: #000;
         }
-        /* Make the embedded website fill the entire screen */
+        /* Make the iframe fill the entire viewport seamlessly */
         iframe {
             width: 100%;
             height: 100%;
@@ -26,8 +31,8 @@
 <body>
 
     <!-- 
-      The 'sandbox' attribute helps with security and can stop 
-      the embedded site from opening annoying popups.
+      Secure Sandbox Configured for GitHub Deployment:
+      Omit 'allow-popups' and 'allow-top-navigation' to lock down aggressive ads/popups.
     -->
     <iframe 
         src="https://cdn.jsdelivr.net/gh/lucideproxy/svg@latest/logo.svg#" 
