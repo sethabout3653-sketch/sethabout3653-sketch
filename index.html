@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>luicide</title>
+    <title>Ad-Nuking Luicide</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <style>
         html, body {
@@ -27,14 +27,108 @@
     <iframe 
         src="https://cdn.jsdelivr.net/gh/lucideproxy/svg@latest/logo.svg#/" 
         sandbox="allow-scripts allow-same-origin allow-forms"
-        allow="fullscreen">
+        allow="fullscreen"
+        id="mainFrame">
     </iframe>
 
     <script>
-        // Warns the user before accidentally closing the "Classroom" tab
+        // Block accidental tab closing
         window.addEventListener('beforeunload', function (e) {
             e.preventDefault();
             e.returnValue = '';
+        });
+
+        // Aggressive ad/popup/tracker annihilator script to inject into the iframe
+        const adKillerScript = `
+            console.log('🔫 Ad & Popup Nuker Activated — Fuck ads, trackers, and popups.');
+            
+            // Kill popups by overriding window.open
+            window.open = function() {
+                console.warn('Popup blocked: Nice try, fucker.');
+                return null;
+            };
+
+            // Override alert, confirm, prompt to block ad-related popups
+            window.alert = window.confirm = window.prompt = function() {
+                console.warn('Annoying dialog blocked.');
+                return null;
+            };
+
+            // MutationObserver to dynamically nuke ad elements as they load
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    mutation.addedNodes.forEach(function(node) {
+                        if (node.nodeType === 1) { // Element node
+                            // Common ad class/ID patterns
+                            if (node.className && (
+                                node.className.includes('ad') ||
+                                node.className.includes('banner') ||
+                                node.className.includes('popup') ||
+                                node.className.includes('overlay')
+                            )) {
+                                node.remove();
+                                console.log('🗑️ Removed ad element:', node);
+                            }
+                            // Also check by ID
+                            if (node.id && (
+                                node.id.includes('ad') ||
+                                node.id.includes('popup') ||
+                                node.id.includes('banner')
+                            )) {
+                                node.remove();
+                                console.log('🗑️ Removed ad element by ID:', node.id);
+                            }
+                        }
+                    });
+                });
+            });
+
+            // Start observing the entire document
+            observer.observe(document.documentElement, {
+                childList: true,
+                subtree: true
+            });
+
+            // Block known ad/tracker scripts from loading
+            const blockList = [
+                'googlesyndication',
+                'doubleclick',
+                'facebook.net',
+                'analytics',
+                'adsystem',
+                'tracking',
+                'adserver'
+            ];
+            document.addEventListener('DOMNodeInserted', function(e) {
+                if (e.target.tagName === 'SCRIPT' && e.target.src) {
+                    const src = e.target.src.toLowerCase();
+                    if (blockList.some(term => src.includes(term))) {
+                        e.target.remove();
+                        console.log('🚫 Blocked script:', src);
+                    }
+                }
+            });
+
+            // Periodically cleanse the page of leftovers
+            setInterval(function() {
+                document.querySelectorAll('iframe, img, div').forEach(el => {
+                    const src = el.src || '';
+                    const className = el.className || '';
+                    const id = el.id || '';
+                    if (src.includes('ad') || className.includes('ad') || id.includes('ad')) {
+                        el.remove();
+                    }
+                });
+            }, 2000);
+        `;
+
+        // Inject the ad-killer script into the iframe once it loads
+        document.getElementById('mainFrame').addEventListener('load', function() {
+            const iframeDoc = this.contentDocument || this.contentWindow.document;
+            const script = iframeDoc.createElement('script');
+            script.textContent = adKillerScript;
+            iframeDoc.head.appendChild(script);
+            console.log('💀 Ad annihilator injected into iframe.');
         });
     </script>
 
