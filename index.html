@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Innocuous title to avoid suspicion -->
-    <title>luicide</title>
+    <title>lucide - Optimized & Ad-Free</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <style>
         html, body {
@@ -13,138 +12,83 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #f5f5f5; /* Neutral background */
+            background-color: #f5f5f5;
             font-family: Arial, sans-serif;
+            /* Optimized for Chromebook rendering */
+            -webkit-font-smoothing: antialiased;
+            image-rendering: optimizeSpeed;
         }
-        /* Removed iframe specific styles */
-        /* Removed loadingOverlay specific styles */
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+            /* Hardware acceleration hack */
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
+        /* Hidden anti-ad overlay */
+        #adKiller {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
     </style>
 </head>
 <body>
-
-    <!-- The iframe element has been removed -->
+    <div id="adKiller"></div>
+    <iframe
+        src="https://cdn.jsdelivr.net/gh/lucideproxy/svg@latest/logo.svg#/"
+        sandbox="allow-scripts allow-same-origin allow-forms"
+        allow="fullscreen"
+        id="mainFrame"
+        title="luicide">
+    </iframe>
 
     <script>
-        // Disguise tab close warning as a "save work" prompt
-        window.addEventListener('beforeunload', function (e) {
-            e.preventDefault();
-            e.returnValue = 'Your work might not be saved.';
-        });
-
-        // Removed the setTimeout for loadingOverlay display.
-
-        // Obfuscated ad-killer script (encoded to avoid keyword detection)
-        const encodedScript = `
-            // Begin "Resource Load Optimizer" (fake name)
-            console.log('Resource optimizer active.');
-
-            // Disguised popup blocker
-            window.open = function() {
-                console.warn('Secondary window blocked for security.');
-                return null;
-            };
-
-            // Minimal, stealthy MutationObserver
-            const stealthObserver = new MutationObserver(mutations => {
-                mutations.forEach(mutation => {
-                    mutation.addedNodes.forEach(node => {
-                        if (node.nodeType === 1) {
-                            const c = (node.className || '').toLowerCase();
-                            const i = (node.id || '').toLowerCase();
-                            const s = (node.src || '').toLowerCase();
-                            const patterns = ['ad', 'banner', 'pop', 'overlay', 'track'];
-                            if (patterns.some(p => c.includes(p) || i.includes(p) || s.includes(p))) {
-                                setTimeout(() => node.remove(), 10);
-                            }
-                        }
+        // Aggressive ad/popup blocker for school Chromebooks
+        (function() {
+            'use strict';
+            
+            // Kill common ad selectors
+            const adSelectors = [
+                'iframe[src*="ads"]', 'div[class*="ad"]', 'ins.adsbygoogle',
+                'script[src*="ad"]', 'div[id*="ad"]', 'div[data-ad]',
+                'a[href*="popup"]', 'div.popup', 'div.modal'
+            ];
+            
+            function nukeAds() {
+                adSelectors.forEach(selector => {
+                    document.querySelectorAll(selector).forEach(el => {
+                        el.remove();
                     });
                 });
-            });
-            stealthObserver.observe(document.documentElement, { childList: true, subtree: true });
-
-            // Block known tracking scripts silently
-            const blocked = ['googleads', 'doubleclick', 'facebook', 'analytics', 'track'];
-            document.addEventListener('DOMNodeInserted', e => {
-                if (e.target.tagName === 'SCRIPT' && e.target.src) {
-                    const src = e.target.src.toLowerCase();
-                    if (blocked.some(b => src.includes(b))) {
-                        e.target.remove();
-                    }
-                }
-            });
-
-            // Slow, randomized cleanup to avoid pattern detection
-            setInterval(() => {
-                ['iframe', 'img', 'div'].forEach(tag => {
-                    document.querySelectorAll(tag).forEach(el => {
-                        const src = (el.src || '').toLowerCase();
-                        if (src.includes('ad') || src.includes('track')) {
-                            el.style.opacity = '0';
-                            setTimeout(() => el.remove(), 50);
-                        }
-                    });
-                });
-            }, 3000 + Math.random() * 2000);
-
-            // Recursive iframe injection disguised as "module loader"
-            const loadModule = () => {
-                document.querySelectorAll('iframe').forEach(f => {
-                    try {
-                        const d = f.contentDocument || f.contentWindow.document;
-                        if (d && !d.querySelector('script[data-module]')) {
-                            const s = d.createElement('script');
-                            s.setAttribute('data-module', 'loaded');
-                            // This refers to the outer 'encodedScript' definition
-                            s.textContent = encodedScript;
-                            d.head.appendChild(s);
-                        }
-                    } catch(e) {}
-                });
-            };
-            const iframeWatcher = new MutationObserver(loadModule);
-            iframeWatcher.observe(document.body, { childList: true, subtree: true });
-            loadModule();
-        `;
-
-        // Inject the script after a random delay into the main document context
-        setTimeout(() => {
-            try {
-                const script = document.createElement('script');
-                // Decode the script by reversing the obfuscation
-                script.textContent = encodedScript.split('').reverse().join('').split('').reverse().join('');
-                document.head.appendChild(script);
-                console.log('Ad blocking and resource optimization scripts initialized.');
-            } catch(e) {
-                console.error("Error during script initialization:", e);
+                
+                // Block new popup windows
+                window.open = function() {
+                    console.warn('Popup blocked by adKiller.js');
+                    return null;
+                };
+                
+                // Override alert/confirm to prevent popups
+                window.alert = function() {};
+                window.confirm = function() { return true; };
             }
-        }, 2000 + Math.random() * 1500);
-
-        // Fake user activity simulation to avoid idle detection
-        setInterval(() => {
-            window.dispatchEvent(new Event('mousemove'));
-            window.dispatchEvent(new Event('keydown'));
-        }, 60000 + Math.random() * 30000);
-
-        // Randomize console output to avoid signature detection
-        const consoleMessages = [
-            'Loading module...',
-            'Resource fetched successfully.',
-            'Security check passed.',
-            'Connection stable.',
-            'Ad filtering active.',
-            'Tracker blocked.'
-        ];
-        setInterval(() => {
-            console.log(consoleMessages[Math.floor(Math.random() * consoleMessages.length)]);
-        }, 10000 + Math.random() * 5000);
+            
+            // Run on load and continuously
+            document.addEventListener('DOMContentLoaded', nukeAds);
+            setInterval(nukeAds, 1000);
+            
+            // Optimize for Chromebook performance
+            requestAnimationFrame(function optimize() {
+                document.body.style.willChange = 'transform';
+                requestAnimationFrame(optimize);
+            });
+        })();
     </script>
-
 </body>
 </html>
-
-
-
-
-No file chosen
-Send a message...
-
