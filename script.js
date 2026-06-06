@@ -1,17 +1,19 @@
 (function() {
     'use strict';
 
-    // 1. Massive list of ad, popup, and tracker selectors
+    // 1. Massive list of ad, popup, tracker, AND external image selectors
     const adSelectors = [
-        // Ad networks (Google, Amazon, etc.)
+        // Ad networks & Iframe ads
         'ins.adsbygoogle', 'iframe[src*="doubleclick"]', 'iframe[src*="amazon-adsystem"]',
         'iframe[id^="google_ads"]', '[id^="div-gpt-ad"]', 'script[src*="ads"]',
         
-        // Generic ad containers
+        // External Image Ads (Targets specific URLs and tracking pixels)
+        'img[src*="ad"]', 'img[src*="banner"]', 'img[src*="sponsor"]', 
+        'img[src*="tracker"]', 'img[src*="pixel"]', 'img[src*="affiliate"]',
+        
+        // Generic ad containers & popups
         '[class*="ad-container"]', '[class*="ad-banner"]', '[id*="ad-wrapper"]',
         '.ad', '.ads', '.ad-box', '.advertisement', '.sponsor', '.sponsored-content',
-        
-        // Popups, overlays, and modals
         '[class*="popup"]', '[class*="modal"]', '[id*="popup"]', '[id*="overlay"]',
         '.interstitial', '.floating-ad'
     ];
@@ -25,8 +27,14 @@
             // Protect your actual app elements
             if (el.id !== 'adKiller' && el.id !== 'mainFrame') {
                 el.style.setProperty('display', 'none', 'important'); // Hide instantly
-                el.remove(); // Delete from DOM
+                el.remove(); // Delete from DOM permanently
             }
+        });
+        
+        // Secondary sweep: Find any image directly attached to the body (usually popups)
+        document.querySelectorAll('body > img').forEach(img => {
+            img.style.display = 'none';
+            img.remove();
         });
     }
 
@@ -44,7 +52,7 @@
         }
     });
 
-    // Start watching the whole HTML document
+    // Start watching the whole HTML document for changes
     observer.observe(document.documentElement, {
         childList: true,
         subtree: true
@@ -62,7 +70,7 @@
         requestAnimationFrame(optimize);
     });
 
-    // Initial sweep
+    // Initial sweep when the page loads
     document.addEventListener('DOMContentLoaded', nukeAds);
     nukeAds();
 
