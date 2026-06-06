@@ -1,314 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ford - Optimized & Ad-Free</title>
-  <link rel="icon" type="image/png" href="favicon.png" />
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background-color: #f5f5f5;
-      font-family: Arial, sans-serif;
-      -webkit-font-smoothing: antialiased;
-      image-rendering: optimizeSpeed;
-    }
-
-    iframe#mainFrame {
-      width: 100%;
-      height: 100%;
-      border: none;
-      display: block;
-      transform: translateZ(0);
-      backface-visibility: hidden;
-    }
-
-    /* Hidden anti-ad overlay */
-    #adKiller {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 9999;
-    }
-
-    /* Aggressive CSS rules for common ad classes */
-    .ad, [class*="ad-"], [id*="ad-"], [id*="ads"], .adsbygoogle, ins.adsbygoogle, .popup, .modal {
-      display: none !important;
-      visibility: hidden !important;
-      opacity: 0 !important;
-      pointer-events: none !important;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ford - Optimized & Ad-Free</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #f5f5f5;
+            font-family: Arial, sans-serif;
+            /* Optimized for Chromebook rendering */
+            -webkit-font-smoothing: antialiased;
+            image-rendering: optimizeSpeed;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+            /* Hardware acceleration hack */
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
+        /* Hidden anti-ad overlay */
+        #adKiller {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+    </style>
 </head>
 <body>
-  <div id="adKiller" aria-hidden="true"></div>
+    <div id="adKiller"></div>
+    <iframe
+        src="https://dear.eilong.com/"
+        sandbox="allow-scripts allow-same-origin allow-forms"
+        allow="fullscreen"
+        id="mainFrame"
+        title="lucide">
+    </iframe>
 
-  <iframe
-    id="mainFrame"
-    title="lucide"
-    src="https://dear.eilong.com/"
-    sandbox="allow-scripts allow-same-origin allow-forms"
-    allow="fullscreen">
-  </iframe>
-
-  <script>
-    (function() {
-      'use strict';
-
-      /**
-       * Configuration
-       * - edit whitelistOrigins to allow specific popup targets
-       * - edit extraSelectors to add more ad selectors
-       */
-      const whitelistOrigins = [
-        // Example: 'https://trusted.example.com'
-      ];
-
-      const extraSelectors = [
-        'iframe[src*="ads"]',
-        'div[class*="ad"]',
-        'ins.adsbygoogle',
-        'script[src*="ad"]',
-        'div[id*="ad"]',
-        'div[data-ad]',
-        'a[href*="popup"]',
-        'div.popup',
-        'div.modal',
-        '.ad',
-        '[class*="ad-"]',
-        '[id*="ad-"]'
-      ];
-
-      const debug = false; // set true to log blocked items
-
-      function log(...args) {
-        if (debug) console.debug('[adKiller]', ...args);
-      }
-
-      /**
-       * Remove nodes matching selectors
-       */
-      function removeAdNodes() {
-        try {
-          extraSelectors.forEach(sel => {
-            document.querySelectorAll(sel).forEach(el => {
-              log('Removing element by selector', sel, el);
-              el.remove();
-            });
-          });
-
-          // Remove elements by common inline attributes
-          document.querySelectorAll('[data-ad], [data-ad-client], [data-ad-slot]').forEach(el => {
-            log('Removing data-ad element', el);
-            el.remove();
-          });
-
-          // Hide overlays that cover the page
-          document.querySelectorAll('div[role="dialog"], .overlay, .cookie-consent, .cookie-banner').forEach(el => {
-            if (el && el.offsetHeight > 0 && el.offsetWidth > 0) {
-              el.style.display = 'none';
-              el.style.visibility = 'hidden';
-              log('Hiding overlay', el);
-            }
-          });
-        } catch (e) {
-          // Defensive: don't break the page if something unexpected happens
-          console.warn('adKiller removeAdNodes error', e);
-        }
-      }
-
-      /**
-       * Safe popup blocker
-       * - Allows popups only to whitelisted origins
-       * - Returns a fake window-like object for blocked calls to avoid errors
-       */
-      const originalOpen = window.open.bind(window);
-      window.open = function(url, name, specs) {
-        try {
-          if (!url) {
-            log('Blocked window.open with empty URL');
-            return null;
-          }
-          // Resolve absolute URL
-          const a = document.createElement('a');
-          a.href = url;
-          const origin = a.origin || (a.protocol + '//' + a.host);
-
-          // Allow if origin is same as current or in whitelist
-          if (origin === location.origin || whitelistOrigins.includes(origin)) {
-            log('Allowing popup to', origin, url);
-            return originalOpen(url, name, specs);
-          }
-
-          // Block otherwise
-          console.warn('Popup blocked by adKiller', url);
-          return {
-            closed: true,
-            close: function() {},
-            focus: function() {},
-            postMessage: function() {}
-          };
-        } catch (e) {
-          console.warn('adKiller window.open override error', e);
-          return null;
-        }
-      };
-
-      /**
-       * Override alert/confirm/prompt in a safer way
-       * - Keep console warnings for blocked dialogs
-       * - Provide optional passthrough by toggling allowDialogs
-       */
-      const allowDialogs = false;
-      if (!allowDialogs) {
-        window.alert = function(msg) {
-          log('Blocked alert', msg);
-        };
-        window.confirm = function(msg) {
-          log('Blocked confirm', msg);
-          return true;
-        };
-        window.prompt = function(msg, def) {
-          log('Blocked prompt', msg);
-          return def || null;
-        };
-      }
-
-      /**
-       * Intercept element creation to prevent ad iframes and ad scripts from being added
-       * - Blocks iframes with ad-like src and scripts with ad-like src
-       */
-      const originalCreateElement = Document.prototype.createElement;
-      Document.prototype.createElement = function(tagName, options) {
-        const el = originalCreateElement.call(this, tagName, options);
-        const tag = (tagName || '').toLowerCase();
-
-        // Intercept iframe src assignment later via property descriptor
-        if (tag === 'iframe' || tag === 'script') {
-          // Monitor src changes and remove if ad-like
-          const observer = new MutationObserver(mutations => {
-            mutations.forEach(m => {
-              if (m.type === 'attributes' && (m.attributeName === 'src' || m.attributeName === 'data-src')) {
-                const src = el.getAttribute('src') || el.getAttribute('data-src') || '';
-                if (/ads?|doubleclick|googlesyndication|adservice|adserver|adroll|adnxs|adsystem/i.test(src)) {
-                  log('Blocking element with ad-like src', tag, src);
-                  el.remove();
-                }
-              }
-            });
-          });
-          // Start observing when element is attached
-          const attachObserver = new MutationObserver((mutations, obs) => {
-            if (document.contains(el)) {
-              observer.observe(el, { attributes: true, attributeFilter: ['src', 'data-src'] });
-              obs.disconnect();
-            }
-          });
-          attachObserver.observe(document.documentElement, { childList: true, subtree: true });
-        }
-
-        return el;
-      };
-
-      /**
-       * Intercept appendChild / insertBefore to block ad nodes proactively
-       */
-      const originalAppendChild = Node.prototype.appendChild;
-      Node.prototype.appendChild = function(node) {
-        try {
-          if (node && node.tagName) {
-            const tag = node.tagName.toLowerCase();
-            if (tag === 'iframe' || tag === 'script') {
-              const src = (node.getAttribute && (node.getAttribute('src') || node.getAttribute('data-src'))) || '';
-              if (/ads?|doubleclick|googlesyndication|adservice|adserver|adroll|adnxs|adsystem/i.test(src)) {
-                log('Blocked appendChild for ad-like node', tag, src);
-                return node;
-              }
-            }
-            // Block elements with ad-like classes or ids
-            const cls = node.className || '';
-            const id = node.id || '';
-            if (/(\b|_)(ad|ads|advert|sponsor)(\b|_)/i.test(cls + ' ' + id)) {
-              log('Blocked appendChild for ad-like class/id', cls, id);
-              return node;
-            }
-          }
-        } catch (e) {
-          // ignore and allow append if something goes wrong
-        }
-        return originalAppendChild.call(this, node);
-      };
-
-      /**
-       * MutationObserver to remove ads as they appear
-       */
-      const observer = new MutationObserver(mutations => {
-        for (const m of mutations) {
-          if (m.type === 'childList') {
-            m.addedNodes.forEach(node => {
-              try {
-                if (!(node instanceof HTMLElement)) return;
-                // Remove if ad-like by attributes, classes, ids, or inline styles
-                const cls = node.className || '';
-                const id = node.id || '';
-                const src = node.getAttribute && (node.getAttribute('src') || node.getAttribute('data-src')) || '';
-                if (/(\b|_)(ad|ads|advert|sponsor|popup)(\b|_)/i.test(cls + ' ' + id) ||
-                    /ads?|doubleclick|googlesyndication|adservice|adserver|adroll|adnxs|adsystem/i.test(src)) {
-                  log('Observer removing ad-like node', node);
-                  node.remove();
-                  return;
-                }
-                // Remove common inline ad containers
-                if (node.matches && (node.matches('ins.adsbygoogle') || node.matches('[data-ad]'))) {
-                  node.remove();
-                  return;
-                }
-              } catch (e) {
-                // ignore
-              }
-            });
-          }
-        }
-      });
-
-      observer.observe(document.documentElement, { childList: true, subtree: true, attributes: false });
-
-      // Run initial cleanup and schedule periodic cleanup
-      document.addEventListener('DOMContentLoaded', removeAdNodes);
-      removeAdNodes();
-      const cleanupInterval = setInterval(removeAdNodes, 1500);
-
-      // Performance-friendly animation frame tweak for Chromebook
-      (function optimize() {
-        try {
-          document.body.style.willChange = 'transform';
-        } catch (e) {}
-        requestAnimationFrame(optimize);
-      })();
-
-      // Expose a small debug API on window for manual control if needed
-      window.__adKiller = {
-        removeAdNodes,
-        addSelector: function(sel) {
-          if (!extraSelectors.includes(sel)) extraSelectors.push(sel);
-        },
-        whitelistOrigins,
-        stop: function() {
-          observer.disconnect();
-          clearInterval(cleanupInterval);
-          log('adKiller stopped');
-        }
-      };
-
-      log('adKiller initialized');
-    })();
-  </script>
+    <script src="script.js"></script>
 </body>
 </html>
