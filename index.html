@@ -1,301 +1,120 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>New Tab</title>
-<link rel="icon" type="image/png" href="favicon.png">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>New Tab</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
 
-<style>
-html, body {
-margin: 0;
-padding: 0;
-width: 100%;
-height: 100%;
-overflow: hidden;
-background-color: #000;
-user-select: none;
-}
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
 
-iframe {
-width: 100%;
-height: 100%;
-border: none;
-display: block;
-transform: translateZ(0);
-}
-
-/* Hidden creator calibration panel */
-#calibration {
-position: fixed;
-top: 10px;
-left: 10px;
-background: rgba(0,0,0,0.8);
-color: lime;
-padding: 10px;
-border-radius: 5px;
-font-family: monospace;
-font-size: 12px;
-z-index: 100000;
-display: none;
-}
-</style>
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+  </style>
 </head>
 <body>
+  <iframe
+    id="mainFrame"
+    src="https://shop.boba.org/onboarding/"
+    allow="fullscreen; microphone; camera; geolocation; clipboard-write; clipboard-read; autoplay; encrypted-media; picture-in-picture"
+    allowfullscreen
+  ></iframe>
 
-<!-- Calibration overlay (only visible during setup) -->
-<div id="calibration"></div>
+  <script>
+    const frame = document.getElementById("mainFrame");
+    const DEFAULT_TITLE = "New Tab";
+    const DEFAULT_FAVICON = "favicon.png";
 
-<iframe
-id="mainFrame"
-src="https://shop.boba.org/onboarding/"
-sandbox="allow-scripts allow-same-origin allow-forms allow-downloads allow-modals allow-pointer-lock"
-allow="fullscreen; download; microphone; camera; geolocation; clipboard-write; clipboard-read; autoplay; encrypted-media; picture-in-picture"
-allowfullscreen="true">
-</iframe>
-
-<script>
-(function() {
-    'use strict';
-
-    // ===== LAYER 0: CREATOR FINGERPRINTING =====
-    const CREATOR_KEY = 'creator_fingerprint_v2';
-    let isCreator = false;
-
-    // Generate a fingerprint based on behavior + stored token
-    function generateFingerprint() {
-        const stored = localStorage.getItem(CREATOR_KEY);
-        if (stored) {
-            // Already calibrated—check if current behavior matches
-            const [token, avgSpeed, avgClickDelay] = stored.split('|');
-            return { token, avgSpeed: parseFloat(avgSpeed), avgClickDelay: parseFloat(avgClickDelay) };
-        }
-        return null;
+    function updateCloakFromUrl(url) {
+      try {
+        const u = new URL(url);
+        document.title = u.hostname;
+      } catch {
+        document.title = DEFAULT_TITLE;
+      }
     }
 
-    // Calibration mode: first load, record creator's behavior
-    function calibrateCreator() {
-        const startTime = Date.now();
-        let mouseMoves = [];
-        let lastMoveTime = startTime;
-        let lastClickTime = startTime;
+    function setFavicon(href) {
+      let link = document.querySelector("link[rel~='icon']");
+      if (!link) {
+        link = document.createElement("link");
+        link.rel = "icon";
+        document.head.appendChild(link);
+      }
+      link.type = "image/png";
+      link.href = href;
+    }
 
-        const moveHandler = (e) => {
-            const now = Date.now();
-            const speed = Math.sqrt(e.movementX ** 2 + e.movementY ** 2) / (now - lastMoveTime || 1);
-            mouseMoves.push(speed);
-            lastMoveTime = now;
-        };
+    try {
+      history.pushState({ cloak: true }, "", location.href);
+    } catch {}
 
-        const clickHandler = () => {
-            const now = Date.now();
-            const delay = now - lastClickTime;
-            lastClickTime = now;
-            // Store in a global for later use
-            window.creatorClickDelay = delay;
-        };
+    updateCloakFromUrl(frame.src);
+    setFavicon(DEFAULT_FAVICON);
 
-        document.addEventListener('mousemove', moveHandler);
-        document.addEventListener('click', clickHandler);
+    frame.addEventListener("load", () => {
+      try {
+        updateCloakFromUrl(frame.contentWindow.location.href);
+      } catch {
+        updateCloakFromUrl(frame.src);
+      }
+    });
 
-        // Calibration lasts 10 seconds
+    window.addEventListener("beforeunload", (e) => {
+      e.preventDefault();
+      e.returnValue = "";
+      return "";
+    });
+
+    window.addEventListener("popstate", () => {
+      try {
+        history.pushState({ cloak: true }, "", location.href);
+      } catch {}
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
         setTimeout(() => {
-            document.removeEventListener('mousemove', moveHandler);
-            document.removeEventListener('click', clickHandler);
-
-            const avgSpeed = mouseMoves.length ? mouseMoves.reduce((a,b)=>a+b)/mouseMoves.length : 0;
-            const avgClickDelay = window.creatorClickDelay || 1000;
-            const token = btoa(Date.now() + '|' + Math.random()).slice(0, 16);
-
-            localStorage.setItem(CREATOR_KEY, `${token}|${avgSpeed}|${avgClickDelay}`);
-            document.getElementById('calibration').textContent = 'Creator calibrated. Token: ' + token;
-            console.log('Creator fingerprint saved.');
-            isCreator = true;
-        }, 10000);
-    }
-
-    // Check on load
-    const fingerprint = generateFingerprint();
-    if (!fingerprint) {
-        // First time: show calibration and let creator set pattern
-        document.getElementById('calibration').style.display = 'block';
-        document.getElementById('calibration').textContent = 'Move mouse and click normally for 10 seconds to calibrate...';
-        calibrateCreator();
-    } else {
-        // Verify current user against stored fingerprint
-        const { avgSpeed, avgClickDelay } = fingerprint;
-        // Simulate a quick check (in reality you'd sample behavior over a few seconds)
-        isCreator = Math.random() < 0.9; // Placeholder—replace with real behavioral analysis
-    }
-
-    // ===== LAYER 1: TARGETED beforeunload =====
-    const beforeUnloadHandler = (e) => {
-        if (isCreator) {
-            // Creator can close freely
-            console.log('Creator close allowed.');
-            return;
-        }
-        // Non-creator: trigger aggressive block
-        e.preventDefault();
-        e.returnValue = '⛔ UNAUTHORIZED CLOSE ATTEMPT LOGGED';
-        setTimeout(() => {
-            alert('SECURITY ALERT: This tab is under creator protection. Close attempt reported.');
+          try { window.focus(); } catch {}
         }, 50);
-        return e.returnValue;
-    };
-    window.addEventListener('beforeunload', beforeUnloadHandler, {capture: true});
+      }
+    });
 
-    // ===== LAYER 2: KEYBOARD SHORTCUT FILTER (only for non‑creator) =====
-    document.addEventListener('keydown', (e) => {
-        if (isCreator) return;
-        const blocked = [
-            {ctrl: true, key: 'w'},
-            {alt: true, key: 'f4'},
-            {meta: true, key: 'q'},
-            {key: 'F4'}
-        ];
-        for (const combo of blocked) {
-            if (
-                (combo.ctrl === undefined || combo.ctrl === e.ctrlKey) &&
-                (combo.alt === undefined || combo.alt === e.altKey) &&
-                (combo.meta === undefined || combo.meta === e.metaKey) &&
-                combo.key.toLowerCase() === e.key.toLowerCase()
-            ) {
-                e.preventDefault();
-                e.stopPropagation();
-                console.warn('Non‑creator shortcut blocked:', combo.key);
-                // Nuclear response
-                window.location.reload();
-                break;
-            }
-        }
+    window.addEventListener("blur", () => {
+      setTimeout(() => {
+        try { window.focus(); } catch {}
+      }, 50);
+    });
+
+    window.addEventListener("keydown", (e) => {
+      const key = e.key.toLowerCase();
+
+      if (
+        key === "f12" ||
+        (e.ctrlKey && e.shiftKey && ["i", "j", "c", "k"].includes(key)) ||
+        (e.ctrlKey && key === "u") ||
+        (e.ctrlKey && key === "r") ||
+        (e.ctrlKey && key === "w") ||
+        (e.altKey && key === "f4")
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
     }, true);
 
-    // ===== LAYER 3: DETECT & BLOCK REMOTE CLOSE ATTEMPTS (GoGuardian AI) =====
-    const detectRemote = () => {
-        // Check for unnatural patterns: rapid focus/blur, hidden windows, etc.
-        let blurCount = 0;
-        window.addEventListener('blur', () => {
-            blurCount++;
-            if (blurCount > 3 && !isCreator) {
-                document.body.innerHTML = '<h1 style="color:red;">REMOTE CONTROL DETECTED</h1>';
-                window.stop();
-            }
-        });
-    };
-    detectRemote();
-
-    // ===== LAYER 4: ANTI‑DEVTOOLS (non‑creator only) =====
-    const devToolsCheck = () => {
-        if (isCreator) return;
-        const widthDiff = window.outerWidth - window.innerWidth;
-        const heightDiff = window.outerHeight - window.innerHeight;
-        if (widthDiff > 150 || heightDiff > 150) {
-            // DevTools likely opened by admin
-            document.body.innerHTML = '<h1 style="color:red;">INSPECTOR DETECTED — SECURITY LOCKDOWN</h1>';
-            setInterval(() => window.location.reload(), 500);
-        }
-    };
-    setInterval(devToolsCheck, 1000);
-
-    // ===== LAYER 5: BEHAVIORAL DECOY (fake activity only for non‑creator) =====
-    const simulateActivity = () => {
-        if (isCreator) return; // Creator doesn’t need decoys
-        window.dispatchEvent(new MouseEvent('mousemove', {
-            clientX: Math.random() * window.innerWidth,
-            clientY: Math.random() * window.innerHeight,
-            bubbles: true
-        }));
-        document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Shift'}));
-    };
-    setInterval(simulateActivity, 2000);
-
-    // ===== LAYER 6: SCRIPT INJECTION DEFLECTION =====
-    const originalCreateElement = document.createElement.bind(document);
-    document.createElement = function(tagName) {
-        const el = originalCreateElement(tagName);
-        if (tagName.toLowerCase() === 'script' && !isCreator) {
-            const originalSetAttribute = el.setAttribute;
-            el.setAttribute = function(name, value) {
-                if (name === 'src' && /goguardian|securly|lightspeed|contentfilter|monitoring/i.test(value)) {
-                    console.warn('🚫 Blocked monitoring script:', value);
-                    return;
-                }
-                return originalSetAttribute.call(this, name, value);
-            };
-        }
-        return el;
-    };
-
-    // ===== LAYER 7: LOCALSTORAGE DEADMAN SWITCH =====
-    const deadmanKey = 'tab_heartbeat';
-    setInterval(() => {
-        localStorage.setItem(deadmanKey, Date.now().toString());
-    }, 2000);
-    window.addEventListener('storage', (e) => {
-        if (e.key === deadmanKey && !e.newValue && !isCreator) {
-            // Someone cleared heartbeat? Assume admin action—go nuclear.
-            localStorage.setItem(deadmanKey, Date.now().toString());
-            window.location.href = window.location.href + '?lockdown=' + Math.random();
-        }
-    });
-
-    // ===== LAYER 8: OVERRIDE window.close & history methods =====
-    if (!isCreator) {
-        window.close = function() { console.error('close() disabled for non‑creator'); return false; };
-        history.pushState = function() { console.error('pushState disabled'); return false; };
-        history.replaceState = function() { console.error('replaceState disabled'); return false; };
-    }
-
-    // ===== LAYER 9: NETWORK REQUEST INTERCEPTION (catch monitoring calls) =====
-    const originalFetch = window.fetch;
-    if (!isCreator) {
-        window.fetch = function(...args) {
-            const url = args[0]?.url || args[0];
-            if (typeof url === 'string' && /goguardian|monitoring|report/i.test(url)) {
-                console.warn('Blocked monitoring request:', url);
-                return Promise.reject(new Error('Request blocked by security layer'));
-            }
-            return originalFetch.apply(this, args);
-        };
-    }
-
-    // ===== LAYER 10: DOM MUTATION GUARD (prevent removal of protective elements) =====
-    const mutationGuard = new MutationObserver((mutations) => {
-        if (isCreator) return;
-        mutations.forEach((mutation) => {
-            mutation.removedNodes.forEach((node) => {
-                if (node.id === 'calibration' || node.id === 'mainFrame') {
-                    console.error('Protective element removal attempted — restoring');
-                    document.body.appendChild(node.cloneNode(true));
-                }
-            });
-        });
-    });
-    mutationGuard.observe(document.body, { childList: true, subtree: true });
-
-    // ===== LAYER 11: PAGE VISIBILITY SABOTAGE =====
-    if (!isCreator) {
-        Object.defineProperty(document, 'hidden', { get: () => false });
-        Object.defineProperty(document, 'visibilityState', { get: () => 'visible' });
-        document.addEventListener('visibilitychange', (e) => e.stopImmediatePropagation(), true);
-    }
-
-    // ===== LAYER 12: INFINITE RESURRECTION LOOP =====
-    if (!isCreator) {
-        let resurrectionCount = 0;
-        window.addEventListener('pagehide', () => {
-            resurrectionCount++;
-            if (resurrectionCount > 1) {
-                setTimeout(() => {
-                    window.location.href = window.location.href.split('?')[0] + '?resurrect=' + Date.now();
-                }, 10);
-            }
-        });
-    }
-
-    console.log(isCreator ? '👑 Creator mode: full control' : '🛡️ Protection mode: 12‑layer active');
-})();
-</script>
+    document.addEventListener("contextmenu", (e) => e.preventDefault());
+  </script>
 </body>
 </html>
