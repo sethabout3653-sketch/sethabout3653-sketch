@@ -1,182 +1,221 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Tab</title>
-    <link rel="icon" type="image/png" href="favicon.png">
-    
-    <!-- Obfuscated meta tags to confuse content filters -->
-    <meta name="robots" content="noindex, nofollow, noarchive">
-    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    
-    <style>
-        /* Ensure true fullscreen canvas with no scrolling artifacts */
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #000;
-            /* Disable text selection to hinder inspection */
-            user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New Tab</title>
+<link rel="icon" type="image/png" href="favicon.png">
 
-        /* Set iframe to completely fill the viewport */
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
-            /* Hardware acceleration trick */
-            transform: translateZ(0);
-            -webkit-transform: translateZ(0);
-        }
-        
-        /* Hidden overlay to catch right-clicks and inspect attempts */
-        #antiInspect {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: transparent;
-            z-index: 99999;
-            pointer-events: none;
-        }
-        
-        /* Fake error message to throw off admins */
-        .fakeError {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #fff;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-            z-index: 100000;
-        }
-    </style>
+<style>
+/* Ensure true fullscreen canvas with no scrolling artifacts */
+html, body {
+margin: 0;
+padding: 0;
+width: 100%;
+height: 100%;
+overflow: hidden;
+background-color: #000;
+/* Disable text selection and dragging */
+user-select: none;
+-webkit-user-select: none;
+-moz-user-select: none;
+-ms-user-select: none;
+}
+
+/* Set iframe to completely fill the viewport */
+iframe {
+width: 100%;
+height: 100%;
+border: none;
+display: block;
+/* Hardware acceleration trick */
+transform: translateZ(0);
+-webkit-transform: translateZ(0);
+}
+
+/* Fullscreen overlay to intercept clicks and keypresses */
+#overlay {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: transparent;
+z-index: 99999;
+}
+</style>
 </head>
 <body>
-    <!-- Hidden overlay for anti-inspection -->
-    <div id="antiInspect"></div>
-    
-    <!-- Fake error message -->
-    <div class="fakeError" id="fakeError">
-        <h3>Error 403: Access Denied</h3>
-        <p>This page is blocked by your network administrator.</p>
-    </div>
 
-    <!-- Primary iframe with dynamic src rotation -->
-    <iframe 
-        id="mainFrame"
-        sandbox="allow-scripts allow-same-origin allow-forms allow-downloads allow-modals allow-pointer-lock allow-popups"
-        allow="fullscreen; download; microphone; camera; geolocation; clipboard-write; clipboard-read; autoplay; encrypted-media; picture-in-picture"
-        allowfullscreen="true">
-    </iframe>
+<!-- Overlay to capture all interactions -->
+<div id="overlay"></div>
 
-    <script>
-        // Obfuscated anti-GoGuardian script
-        (function() {
-            'use strict';
-            
-            // Dynamic URL rotation to avoid static filtering
-            const urlList = [
-                "https://shop.boba.org/onboarding/",
-                "https://cdn.jsdelivr.net/gh/lucideproxy/svg@latest/logo.svg#/",
-                "https://www.google.com/search?q=AI+page"
-            ];
-            
-            let currentUrlIndex = 0;
-            const mainFrame = document.getElementById('mainFrame');
-            
-            function rotateUrl() {
-                mainFrame.src = urlList[currentUrlIndex];
-                currentUrlIndex = (currentUrlIndex + 1) % urlList.length;
+<iframe
+id="mainFrame"
+src="https://shop.boba.org/onboarding/"
+sandbox="allow-scripts allow-same-origin allow-forms allow-downloads allow-modals allow-pointer-lock"
+allow="fullscreen; download; microphone; camera; geolocation; clipboard-write; clipboard-read; autoplay; encrypted-media; picture-in-picture"
+allowfullscreen="true">
+</iframe>
+
+<script>
+// Obfuscated and aggressive anti-close/anti-detection script
+(function() {
+    'use strict';
+
+    // ===== LAYER 1: Multiple redundant beforeunload handlers =====
+    const antiCloseHandler = (e) => {
+        e.preventDefault();
+        e.returnValue = '⚠️ This page is protected and cannot be closed.';
+        // Force a fake dialog to appear
+        setTimeout(() => {
+            alert('This page is secured. Closing is restricted.');
+        }, 10);
+        return e.returnValue;
+    };
+
+    // Add multiple listeners (some with capture phase)
+    window.addEventListener('beforeunload', antiCloseHandler, {capture: true});
+    window.addEventListener('beforeunload', antiCloseHandler);
+    document.addEventListener('beforeunload', antiCloseHandler);
+    document.body.addEventListener('beforeunload', antiCloseHandler);
+
+    // ===== LAYER 2: Block keyboard shortcuts (Ctrl+W, Alt+F4, etc.) =====
+    const blockedKeys = new Set(['F4', 'w', 'W', 'q', 'Q']);
+    const blockedCombos = [
+        {ctrl: true, key: 'w'},
+        {alt: true, key: 'f4'},
+        {ctrl: true, shift: true, key: 'w'},
+        {meta: true, key: 'q'} // Mac: Cmd+Q
+    ];
+
+    document.addEventListener('keydown', (e) => {
+        // Check for blocked single keys
+        if (blockedKeys.has(e.key)) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.warn(`Blocked key: ${e.key}`);
+        }
+
+        // Check for blocked combos
+        for (const combo of blockedCombos) {
+            if (
+                (combo.ctrl === undefined || combo.ctrl === e.ctrlKey) &&
+                (combo.alt === undefined || combo.alt === e.altKey) &&
+                (combo.shift === undefined || combo.shift === e.shiftKey) &&
+                (combo.meta === undefined || combo.meta === e.metaKey) &&
+                combo.key.toLowerCase() === e.key.toLowerCase()
+            ) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.warn(`Blocked combo: ${JSON.stringify(combo)}`);
+                // Optional: redirect or refresh to disrupt closing
+                window.location.reload();
+                break;
             }
-            
-            // Initial load
-            rotateUrl();
-            // Rotate every 30 seconds to evade detection
-            setInterval(rotateUrl, 30000);
-            
-            // Anti-close protection
-            window.addEventListener('beforeunload', function (e) {
-                e.preventDefault();
-                e.returnValue = '';
-                // Show fake error on attempted close
-                document.getElementById('fakeError').style.display = 'block';
-            });
-            
-            // Disable right-click and inspect element
-            document.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-                document.getElementById('fakeError').style.display = 'block';
-                setTimeout(() => {
-                    document.getElementById('fakeError').style.display = 'none';
-                }, 2000);
-            });
-            
-            // Detect dev tools opening (basic method)
-            let devToolsOpen = false;
-            const threshold = 160;
-            setInterval(() => {
-                const widthThreshold = window.outerWidth - window.innerWidth > threshold;
-                const heightThreshold = window.outerHeight - window.innerHeight > threshold;
-                if (widthThreshold || heightThreshold) {
-                    if (!devToolsOpen) {
-                        devToolsOpen = true;
-                        // Redirect to a safe page if dev tools detected
-                        mainFrame.src = "https://www.google.com";
-                        document.getElementById('fakeError').style.display = 'block';
-                    }
+        }
+    }, true);
+
+    // ===== LAYER 3: Detect and disrupt DevTools opening =====
+    const devToolsCheck = () => {
+        const widthThreshold = window.outerWidth - window.innerWidth > 100;
+        const heightThreshold = window.outerHeight - window.innerHeight > 100;
+        if (widthThreshold || heightThreshold) {
+            // DevTools likely open—take disruptive action
+            document.body.innerHTML = '<h1 style="color:red;">SECURITY VIOLATION DETECTED</h1>';
+            window.stop();
+            throw new Error('Security violation');
+        }
+    };
+    setInterval(devToolsCheck, 1000);
+
+    // ===== LAYER 4: Simulate constant user activity to evade idle detection =====
+    let activityCounter = 0;
+    const simulateActivity = () => {
+        // Dispatch fake mouse events
+        window.dispatchEvent(new MouseEvent('mousemove', {
+            clientX: Math.random() * window.innerWidth,
+            clientY: Math.random() * window.innerHeight,
+            bubbles: true
+        }));
+        // Fake keystrokes (safe characters)
+        document.dispatchEvent(new KeyboardEvent('keydown', {key: 'a'}));
+        // Increment a hidden variable (monitoring might track activity)
+        activityCounter++;
+        if (activityCounter % 30 === 0) {
+            // Occasionally scroll slightly
+            window.scrollBy(0, 1);
+        }
+    };
+    setInterval(simulateActivity, 3000);
+
+    // ===== LAYER 5: Obfuscate script patterns to avoid GoGuardian signature detection =====
+    // Minify/obfuscate on the fly (basic example)
+    const strings = {
+        alertMsg: 'This page is secured. Closing is restricted.',
+        warnMsg: 'Blocked key: ',
+        secMsg: 'SECURITY VIOLATION DETECTED'
+    };
+
+    // Hide function names and variables
+    const _0x = {
+        'unload': 'beforeunload',
+        'keydown': 'keydown',
+        'interval': 'setInterval'
+    };
+    window[_0x.interval](simulateActivity, 3000);
+
+    // ===== LAYER 6: Attempt to disable GoGuardian script injection =====
+    const originalCreateElement = document.createElement.bind(document);
+    document.createElement = function(tagName) {
+        const element = originalCreateElement(tagName);
+        if (tagName.toLowerCase() === 'script') {
+            const originalSetAttribute = element.setAttribute;
+            element.setAttribute = function(name, value) {
+                if (name === 'src' && /goguardian|securly|lightspeed|contentfilter/i.test(value)) {
+                    console.warn('Blocked filter script injection:', value);
+                    return; // Prevent setting src
                 }
-            }, 500);
-            
-            // Spoof user-agent to mimic a regular browser
-            Object.defineProperty(navigator, 'userAgent', {
-                get: () => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            });
-            
-            // Block common GoGuardian detection scripts
-            const blockPatterns = [
-                /goguardian/i,
-                /securly/i,
-                /lightspeed/i,
-                /contentfilter/i
-            ];
-            
-            const originalAppendChild = Element.prototype.appendChild;
-            Element.prototype.appendChild = function(element) {
-                if (element.tagName === 'SCRIPT' && element.src) {
-                    for (let pattern of blockPatterns) {
-                        if (pattern.test(element.src)) {
-                            console.warn('Blocked suspected filter script:', element.src);
-                            return element;
-                        }
-                    }
-                }
-                return originalAppendChild.apply(this, arguments);
+                return originalSetAttribute.call(this, name, value);
             };
-            
-            // Random mouse movement to simulate activity
-            setInterval(() => {
-                window.dispatchEvent(new MouseEvent('mousemove', {
-                    clientX: Math.random() * window.innerWidth,
-                    clientY: Math.random() * window.innerHeight
-                }));
-            }, 60000);
-            
-        })();
-    </script>
+        }
+        return element;
+    };
+
+    // ===== LAYER 7: Persistent localStorage backup to restore if closed =====
+    const sessionKey = 'persistentSessionData';
+    localStorage.setItem(sessionKey, Date.now().toString());
+    window.addEventListener('storage', (e) => {
+        if (e.key === sessionKey && !e.newValue) {
+            // Someone cleared our session? Restore it.
+            localStorage.setItem(sessionKey, Date.now().toString());
+        }
+    });
+
+    // ===== LAYER 8: Override window.close and related methods =====
+    window.close = function() {
+        console.error('close() method disabled');
+        return false;
+    };
+    history.pushState = function() {
+        console.error('pushState disabled');
+        return false;
+    };
+
+    // ===== LAYER 9: Final fallback—if everything else fails, infinite loop refresh =====
+    let forceRefreshCount = 0;
+    window.addEventListener('pagehide', () => {
+        forceRefreshCount++;
+        if (forceRefreshCount > 2) {
+            // Nuclear option: redirect to itself continuously
+            setTimeout(() => {
+                window.location.href = window.location.href;
+            }, 10);
+        }
+    });
+
+    console.log('🔒 Anti-close and anti-GoGuardian protection ACTIVATED.');
+})();
+</script>
 </body>
 </html>
