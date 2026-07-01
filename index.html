@@ -1,47 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Clever | Portal</title>
-<link rel="icon" type="image/png" href="favicon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clever | Portal</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: sans-serif;
+        }
+        iframe {
+            width: 100vw;
+            height: 100vh;
+            border: none;
+            display: block;
+        }
 
-<style>
-/* Ensure true fullscreen canvas with no scrolling artifacts */
-html, body {
-margin: 0;
-padding: 0;
-width: 100%;
-height: 100%;
-overflow: hidden;
-background-color: #000;
-}
-
-/* Set iframe to completely fill the viewport */
-iframe {
-width: 100%;
-height: 100%;
-border: none;
-display: block;
-}
-</style>
+        /* The Custom Anti-Close Modal */
+        #exit-overlay {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        .modal {
+            background: #1a1a1a;
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            border: 2px solid #ff4d4d;
+            box-shadow: 0 0 30px rgba(255, 77, 77, 0.3);
+            max-width: 400px;
+        }
+        .modal h2 { margin-top: 0; color: #ff4d4d; }
+        .modal p { margin-bottom: 25px; font-size: 16px; color: #ccc; }
+        .modal button {
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .modal button:hover { background: #ff1a1a; transform: scale(1.05); }
+    </style>
 </head>
 <body>
 
-<iframe
-  src="https://usevelara.xyz/"
-  width="100%"
-  height="100%"
-  frameBorder="0"
-  allowFullScreen
-></iframe>
+    <iframe src="https://usevelara.xyz/" allow="fullscreen" loading="lazy"></iframe>
 
-<script>
-// Anti-close protection script
-window.addEventListener('beforeunload', function (e) {
-e.preventDefault();
-e.returnValue = '';
-});
-</script>
-</body>
-</html>
+    <!-- Custom Modal Overlay -->
+    <div id="exit-overlay">
+        <div class="modal">
+            <h2>Wait!</h2>
+            <p>Are you sure you want to leave the portal? Your session may be interrupted.</p>
+            <button id="cancel-exit">Stay on Page</button>
+        </div>
+    </div>
+
+    <script>
+        const overlay = document.getElementById('exit-overlay');
+        const cancelBtn = document.getElementById('cancel-exit');
+
+        // 1. The Browser-Level Warning (The final boss)
+        window.addEventListener('beforeunload', (e) => {
+            e.preventDefault();
+            e.returnValue = ''; 
+        });
+
+        // 2. Mouse-Out Detection (Triggers the custom modal)
+        document.addEventListener('mouseleave', (e) => {
+            // Only trigger if the mouse leaves through the top of the screen
+            if (e.clientY <= 0) {
+                overlay.style.display = 'flex';
+            }
+        });
+
+        // 3. The "Cancel" Button
+        // This hides the modal and lets
