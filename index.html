@@ -1,106 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>New Tab</title>
-  <link rel="icon" type="image/png" href="favicon.png" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New Tab</title>
+<link rel="icon" type="image/png" href="favicon.png">
 
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #000;
-    }
+<style>
+/* Ensure true fullscreen canvas with no scrolling artifacts */
+html, body {
+margin: 0;
+padding: 0;
+width: 100%;
+height: 100%;
+overflow: hidden;
+background-color: #000;
+}
 
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: 0;
-      display: block;
-    }
-  </style>
+/* Set iframe to completely fill the viewport */
+iframe {
+width: 100%;
+height: 100%;
+border: none;
+display: block;
+}
+</style>
 </head>
 <body>
-  <iframe
-    id="mainFrame"
-    src="https://shop.boba.org/onboarding/"
-    allow="fullscreen; microphone; camera; geolocation; clipboard-write; clipboard-read; autoplay; encrypted-media; picture-in-picture"
-    allowfullscreen
-  ></iframe>
 
-  <script>
-    const frame = document.getElementById("mainFrame");
-    const DEFAULT_TITLE = "New Tab";
-    const DEFAULT_FAVICON = "favicon.png";
+<iframe
+src="https://shop.boba.org/onboarding/"
+sandbox="allow-scripts allow-same-origin allow-forms allow-downloads allow-modals allow-pointer-lock"
+allow="fullscreen; download; microphone; camera; geolocation; clipboard-write; clipboard-read; autoplay; encrypted-media; picture-in-picture"
+allowfullscreen="true">
+</iframe>
 
-    function updateCloakFromUrl(url) {
-      try {
-        const u = new URL(url);
-        document.title = u.hostname;
-      } catch {
-        document.title = DEFAULT_TITLE;
-      }
-    }
-
-    function setFavicon(href) {
-      let link = document.querySelector("link[rel~='icon']");
-      if (!link) {
-        link = document.createElement("link");
-        link.rel = "icon";
-        document.head.appendChild(link);
-      }
-      link.type = "image/png";
-      link.href = href;
-    }
-
-    try {
-      history.pushState({ cloak: true }, "", location.href);
-    } catch {}
-
-    updateCloakFromUrl(frame.src);
-    setFavicon(DEFAULT_FAVICON);
-
-    frame.addEventListener("load", () => {
-      try {
-        updateCloakFromUrl(frame.contentWindow.location.href);
-      } catch {
-        updateCloakFromUrl(frame.src);
-      }
-    });
-
-    window.addEventListener("beforeunload", (e) => {
-      e.preventDefault();
-      e.returnValue = "";
-      return "";
-    });
-
-    window.addEventListener("popstate", () => {
-      try {
-        history.pushState({ cloak: true }, "", location.href);
-      } catch {}
-    });
-
-    window.addEventListener("keydown", (e) => {
-      const key = e.key.toLowerCase();
-
-      if (
-        key === "f12" ||
-        (e.ctrlKey && e.shiftKey && ["i", "j", "c", "k"].includes(key)) ||
-        (e.ctrlKey && key === "u") ||
-        (e.ctrlKey && key === "r") ||
-        (e.ctrlKey && key === "w") ||
-        (e.altKey && key === "f4")
-      ) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    }, true);
-
-    document.addEventListener("contextmenu", (e) => e.preventDefault());
-  </script>
+<script>
+// Anti-close protection script
+window.addEventListener('beforeunload', function (e) {
+e.preventDefault();
+e.returnValue = '';
+});
+</script>
 </body>
 </html>
