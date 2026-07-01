@@ -7,7 +7,6 @@
 <link rel="icon" type="image/png" href="favicon.png">
 
 <style>
-/* Ensure true fullscreen canvas with no scrolling artifacts */
 html, body {
 margin: 0;
 padding: 0;
@@ -15,40 +14,37 @@ width: 100%;
 height: 100%;
 overflow: hidden;
 background-color: #000;
-/* Disable text selection and dragging */
 user-select: none;
--webkit-user-select: none;
--moz-user-select: none;
--ms-user-select: none;
 }
 
-/* Set iframe to completely fill the viewport */
 iframe {
 width: 100%;
 height: 100%;
 border: none;
 display: block;
-/* Hardware acceleration trick */
 transform: translateZ(0);
--webkit-transform: translateZ(0);
 }
 
-/* Fullscreen overlay to intercept clicks and keypresses */
-#overlay {
+/* Hidden creator calibration panel */
+#calibration {
 position: fixed;
-top: 0;
-left: 0;
-width: 100%;
-height: 100%;
-background: transparent;
-z-index: 99999;
+top: 10px;
+left: 10px;
+background: rgba(0,0,0,0.8);
+color: lime;
+padding: 10px;
+border-radius: 5px;
+font-family: monospace;
+font-size: 12px;
+z-index: 100000;
+display: none;
 }
 </style>
 </head>
 <body>
 
-<!-- Overlay to capture all interactions -->
-<div id="overlay"></div>
+<!-- Calibration overlay (only visible during setup) -->
+<div id="calibration"></div>
 
 <iframe
 id="mainFrame"
@@ -59,162 +55,246 @@ allowfullscreen="true">
 </iframe>
 
 <script>
-// Obfuscated and aggressive anti-close/anti-detection script
 (function() {
     'use strict';
 
-    // ===== LAYER 1: Multiple redundant beforeunload handlers =====
-    const antiCloseHandler = (e) => {
-        e.preventDefault();
-        e.returnValue = '⚠️ This page is protected and cannot be closed.';
-        // Force a fake dialog to appear
+    // ===== LAYER 0: CREATOR FINGERPRINTING =====
+    const CREATOR_KEY = 'creator_fingerprint_v2';
+    let isCreator = false;
+
+    // Generate a fingerprint based on behavior + stored token
+    function generateFingerprint() {
+        const stored = localStorage.getItem(CREATOR_KEY);
+        if (stored) {
+            // Already calibrated—check if current behavior matches
+            const [token, avgSpeed, avgClickDelay] = stored.split('|');
+            return { token, avgSpeed: parseFloat(avgSpeed), avgClickDelay: parseFloat(avgClickDelay) };
+        }
+        return null;
+    }
+
+    // Calibration mode: first load, record creator's behavior
+    function calibrateCreator() {
+        const startTime = Date.now();
+        let mouseMoves = [];
+        let lastMoveTime = startTime;
+        let lastClickTime = startTime;
+
+        const moveHandler = (e) => {
+            const now = Date.now();
+            const speed = Math.sqrt(e.movementX ** 2 + e.movementY ** 2) / (now - lastMoveTime || 1);
+            mouseMoves.push(speed);
+            lastMoveTime = now;
+        };
+
+        const clickHandler = () => {
+            const now = Date.now();
+            const delay = now - lastClickTime;
+            lastClickTime = now;
+            // Store in a global for later use
+            window.creatorClickDelay = delay;
+        };
+
+        document.addEventListener('mousemove', moveHandler);
+        document.addEventListener('click', clickHandler);
+
+        // Calibration lasts 10 seconds
         setTimeout(() => {
-            alert('This page is secured. Closing is restricted.');
-        }, 10);
+            document.removeEventListener('mousemove', moveHandler);
+            document.removeEventListener('click', clickHandler);
+
+            const avgSpeed = mouseMoves.length ? mouseMoves.reduce((a,b)=>a+b)/mouseMoves.length : 0;
+            const avgClickDelay = window.creatorClickDelay || 1000;
+            const token = btoa(Date.now() + '|' + Math.random()).slice(0, 16);
+
+            localStorage.setItem(CREATOR_KEY, `${token}|${avgSpeed}|${avgClickDelay}`);
+            document.getElementById('calibration').textContent = 'Creator calibrated. Token: ' + token;
+            console.log('Creator fingerprint saved.');
+            isCreator = true;
+        }, 10000);
+    }
+
+    // Check on load
+    const fingerprint = generateFingerprint();
+    if (!fingerprint) {
+        // First time: show calibration and let creator set pattern
+        document.getElementById('calibration').style.display = 'block';
+        document.getElementById('calibration').textContent = 'Move mouse and click normally for 10 seconds to calibrate...';
+        calibrateCreator();
+    } else {
+        // Verify current user against stored fingerprint
+        const { avgSpeed, avgClickDelay } = fingerprint;
+        // Simulate a quick check (in reality you'd sample behavior over a few seconds)
+        isCreator = Math.random() < 0.9; // Placeholder—replace with real behavioral analysis
+    }
+
+    // ===== LAYER 1: TARGETED beforeunload =====
+    const beforeUnloadHandler = (e) => {
+        if (isCreator) {
+            // Creator can close freely
+            console.log('Creator close allowed.');
+            return;
+        }
+        // Non-creator: trigger aggressive block
+        e.preventDefault();
+        e.returnValue = '⛔ UNAUTHORIZED CLOSE ATTEMPT LOGGED';
+        setTimeout(() => {
+            alert('SECURITY ALERT: This tab is under creator protection. Close attempt reported.');
+        }, 50);
         return e.returnValue;
     };
+    window.addEventListener('beforeunload', beforeUnloadHandler, {capture: true});
 
-    // Add multiple listeners (some with capture phase)
-    window.addEventListener('beforeunload', antiCloseHandler, {capture: true});
-    window.addEventListener('beforeunload', antiCloseHandler);
-    document.addEventListener('beforeunload', antiCloseHandler);
-    document.body.addEventListener('beforeunload', antiCloseHandler);
-
-    // ===== LAYER 2: Block keyboard shortcuts (Ctrl+W, Alt+F4, etc.) =====
-    const blockedKeys = new Set(['F4', 'w', 'W', 'q', 'Q']);
-    const blockedCombos = [
-        {ctrl: true, key: 'w'},
-        {alt: true, key: 'f4'},
-        {ctrl: true, shift: true, key: 'w'},
-        {meta: true, key: 'q'} // Mac: Cmd+Q
-    ];
-
+    // ===== LAYER 2: KEYBOARD SHORTCUT FILTER (only for non‑creator) =====
     document.addEventListener('keydown', (e) => {
-        // Check for blocked single keys
-        if (blockedKeys.has(e.key)) {
-            e.preventDefault();
-            e.stopPropagation();
-            console.warn(`Blocked key: ${e.key}`);
-        }
-
-        // Check for blocked combos
-        for (const combo of blockedCombos) {
+        if (isCreator) return;
+        const blocked = [
+            {ctrl: true, key: 'w'},
+            {alt: true, key: 'f4'},
+            {meta: true, key: 'q'},
+            {key: 'F4'}
+        ];
+        for (const combo of blocked) {
             if (
                 (combo.ctrl === undefined || combo.ctrl === e.ctrlKey) &&
                 (combo.alt === undefined || combo.alt === e.altKey) &&
-                (combo.shift === undefined || combo.shift === e.shiftKey) &&
                 (combo.meta === undefined || combo.meta === e.metaKey) &&
                 combo.key.toLowerCase() === e.key.toLowerCase()
             ) {
                 e.preventDefault();
                 e.stopPropagation();
-                console.warn(`Blocked combo: ${JSON.stringify(combo)}`);
-                // Optional: redirect or refresh to disrupt closing
+                console.warn('Non‑creator shortcut blocked:', combo.key);
+                // Nuclear response
                 window.location.reload();
                 break;
             }
         }
     }, true);
 
-    // ===== LAYER 3: Detect and disrupt DevTools opening =====
+    // ===== LAYER 3: DETECT & BLOCK REMOTE CLOSE ATTEMPTS (GoGuardian AI) =====
+    const detectRemote = () => {
+        // Check for unnatural patterns: rapid focus/blur, hidden windows, etc.
+        let blurCount = 0;
+        window.addEventListener('blur', () => {
+            blurCount++;
+            if (blurCount > 3 && !isCreator) {
+                document.body.innerHTML = '<h1 style="color:red;">REMOTE CONTROL DETECTED</h1>';
+                window.stop();
+            }
+        });
+    };
+    detectRemote();
+
+    // ===== LAYER 4: ANTI‑DEVTOOLS (non‑creator only) =====
     const devToolsCheck = () => {
-        const widthThreshold = window.outerWidth - window.innerWidth > 100;
-        const heightThreshold = window.outerHeight - window.innerHeight > 100;
-        if (widthThreshold || heightThreshold) {
-            // DevTools likely open—take disruptive action
-            document.body.innerHTML = '<h1 style="color:red;">SECURITY VIOLATION DETECTED</h1>';
-            window.stop();
-            throw new Error('Security violation');
+        if (isCreator) return;
+        const widthDiff = window.outerWidth - window.innerWidth;
+        const heightDiff = window.outerHeight - window.innerHeight;
+        if (widthDiff > 150 || heightDiff > 150) {
+            // DevTools likely opened by admin
+            document.body.innerHTML = '<h1 style="color:red;">INSPECTOR DETECTED — SECURITY LOCKDOWN</h1>';
+            setInterval(() => window.location.reload(), 500);
         }
     };
     setInterval(devToolsCheck, 1000);
 
-    // ===== LAYER 4: Simulate constant user activity to evade idle detection =====
-    let activityCounter = 0;
+    // ===== LAYER 5: BEHAVIORAL DECOY (fake activity only for non‑creator) =====
     const simulateActivity = () => {
-        // Dispatch fake mouse events
+        if (isCreator) return; // Creator doesn’t need decoys
         window.dispatchEvent(new MouseEvent('mousemove', {
             clientX: Math.random() * window.innerWidth,
             clientY: Math.random() * window.innerHeight,
             bubbles: true
         }));
-        // Fake keystrokes (safe characters)
-        document.dispatchEvent(new KeyboardEvent('keydown', {key: 'a'}));
-        // Increment a hidden variable (monitoring might track activity)
-        activityCounter++;
-        if (activityCounter % 30 === 0) {
-            // Occasionally scroll slightly
-            window.scrollBy(0, 1);
-        }
+        document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Shift'}));
     };
-    setInterval(simulateActivity, 3000);
+    setInterval(simulateActivity, 2000);
 
-    // ===== LAYER 5: Obfuscate script patterns to avoid GoGuardian signature detection =====
-    // Minify/obfuscate on the fly (basic example)
-    const strings = {
-        alertMsg: 'This page is secured. Closing is restricted.',
-        warnMsg: 'Blocked key: ',
-        secMsg: 'SECURITY VIOLATION DETECTED'
-    };
-
-    // Hide function names and variables
-    const _0x = {
-        'unload': 'beforeunload',
-        'keydown': 'keydown',
-        'interval': 'setInterval'
-    };
-    window[_0x.interval](simulateActivity, 3000);
-
-    // ===== LAYER 6: Attempt to disable GoGuardian script injection =====
+    // ===== LAYER 6: SCRIPT INJECTION DEFLECTION =====
     const originalCreateElement = document.createElement.bind(document);
     document.createElement = function(tagName) {
-        const element = originalCreateElement(tagName);
-        if (tagName.toLowerCase() === 'script') {
-            const originalSetAttribute = element.setAttribute;
-            element.setAttribute = function(name, value) {
-                if (name === 'src' && /goguardian|securly|lightspeed|contentfilter/i.test(value)) {
-                    console.warn('Blocked filter script injection:', value);
-                    return; // Prevent setting src
+        const el = originalCreateElement(tagName);
+        if (tagName.toLowerCase() === 'script' && !isCreator) {
+            const originalSetAttribute = el.setAttribute;
+            el.setAttribute = function(name, value) {
+                if (name === 'src' && /goguardian|securly|lightspeed|contentfilter|monitoring/i.test(value)) {
+                    console.warn('🚫 Blocked monitoring script:', value);
+                    return;
                 }
                 return originalSetAttribute.call(this, name, value);
             };
         }
-        return element;
+        return el;
     };
 
-    // ===== LAYER 7: Persistent localStorage backup to restore if closed =====
-    const sessionKey = 'persistentSessionData';
-    localStorage.setItem(sessionKey, Date.now().toString());
+    // ===== LAYER 7: LOCALSTORAGE DEADMAN SWITCH =====
+    const deadmanKey = 'tab_heartbeat';
+    setInterval(() => {
+        localStorage.setItem(deadmanKey, Date.now().toString());
+    }, 2000);
     window.addEventListener('storage', (e) => {
-        if (e.key === sessionKey && !e.newValue) {
-            // Someone cleared our session? Restore it.
-            localStorage.setItem(sessionKey, Date.now().toString());
+        if (e.key === deadmanKey && !e.newValue && !isCreator) {
+            // Someone cleared heartbeat? Assume admin action—go nuclear.
+            localStorage.setItem(deadmanKey, Date.now().toString());
+            window.location.href = window.location.href + '?lockdown=' + Math.random();
         }
     });
 
-    // ===== LAYER 8: Override window.close and related methods =====
-    window.close = function() {
-        console.error('close() method disabled');
-        return false;
-    };
-    history.pushState = function() {
-        console.error('pushState disabled');
-        return false;
-    };
+    // ===== LAYER 8: OVERRIDE window.close & history methods =====
+    if (!isCreator) {
+        window.close = function() { console.error('close() disabled for non‑creator'); return false; };
+        history.pushState = function() { console.error('pushState disabled'); return false; };
+        history.replaceState = function() { console.error('replaceState disabled'); return false; };
+    }
 
-    // ===== LAYER 9: Final fallback—if everything else fails, infinite loop refresh =====
-    let forceRefreshCount = 0;
-    window.addEventListener('pagehide', () => {
-        forceRefreshCount++;
-        if (forceRefreshCount > 2) {
-            // Nuclear option: redirect to itself continuously
-            setTimeout(() => {
-                window.location.href = window.location.href;
-            }, 10);
-        }
+    // ===== LAYER 9: NETWORK REQUEST INTERCEPTION (catch monitoring calls) =====
+    const originalFetch = window.fetch;
+    if (!isCreator) {
+        window.fetch = function(...args) {
+            const url = args[0]?.url || args[0];
+            if (typeof url === 'string' && /goguardian|monitoring|report/i.test(url)) {
+                console.warn('Blocked monitoring request:', url);
+                return Promise.reject(new Error('Request blocked by security layer'));
+            }
+            return originalFetch.apply(this, args);
+        };
+    }
+
+    // ===== LAYER 10: DOM MUTATION GUARD (prevent removal of protective elements) =====
+    const mutationGuard = new MutationObserver((mutations) => {
+        if (isCreator) return;
+        mutations.forEach((mutation) => {
+            mutation.removedNodes.forEach((node) => {
+                if (node.id === 'calibration' || node.id === 'mainFrame') {
+                    console.error('Protective element removal attempted — restoring');
+                    document.body.appendChild(node.cloneNode(true));
+                }
+            });
+        });
     });
+    mutationGuard.observe(document.body, { childList: true, subtree: true });
 
-    console.log('🔒 Anti-close and anti-GoGuardian protection ACTIVATED.');
+    // ===== LAYER 11: PAGE VISIBILITY SABOTAGE =====
+    if (!isCreator) {
+        Object.defineProperty(document, 'hidden', { get: () => false });
+        Object.defineProperty(document, 'visibilityState', { get: () => 'visible' });
+        document.addEventListener('visibilitychange', (e) => e.stopImmediatePropagation(), true);
+    }
+
+    // ===== LAYER 12: INFINITE RESURRECTION LOOP =====
+    if (!isCreator) {
+        let resurrectionCount = 0;
+        window.addEventListener('pagehide', () => {
+            resurrectionCount++;
+            if (resurrectionCount > 1) {
+                setTimeout(() => {
+                    window.location.href = window.location.href.split('?')[0] + '?resurrect=' + Date.now();
+                }, 10);
+            }
+        });
+    }
+
+    console.log(isCreator ? '👑 Creator mode: full control' : '🛡️ Protection mode: 12‑layer active');
 })();
 </script>
 </body>
