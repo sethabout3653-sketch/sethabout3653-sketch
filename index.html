@@ -84,20 +84,6 @@
       } catch {}
     });
 
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) {
-        setTimeout(() => {
-          try { window.focus(); } catch {}
-        }, 50);
-      }
-    });
-
-    window.addEventListener("blur", () => {
-      setTimeout(() => {
-        try { window.focus(); } catch {}
-      }, 50);
-    });
-
     window.addEventListener("keydown", (e) => {
       const key = e.key.toLowerCase();
 
