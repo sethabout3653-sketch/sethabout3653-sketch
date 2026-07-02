@@ -35,7 +35,18 @@
             justify-content: center;
             align-items: center;
             backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s ease-in-out;
         }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
         .modal {
             background: #1a1a1a;
             color: white;
@@ -45,9 +56,31 @@
             border: 2px solid #ff4d4d;
             box-shadow: 0 0 30px rgba(255, 77, 77, 0.3);
             max-width: 400px;
+            animation: slideUp 0.3s ease-out;
         }
-        .modal h2 { margin-top: 0; color: #ff4d4d; }
-        .modal p { margin-bottom: 25px; font-size: 16px; color: #ccc; }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal h2 { 
+            margin-top: 0; 
+            color: #ff4d4d; 
+            font-size: 24px;
+        }
+        .modal p { 
+            margin-bottom: 25px; 
+            font-size: 16px; 
+            color: #ccc;
+            line-height: 1.5;
+        }
         .modal button {
             background: #ff4d4d;
             color: white;
@@ -58,8 +91,15 @@
             border-radius: 5px;
             cursor: pointer;
             transition: 0.2s;
+            margin: 5px;
         }
-        .modal button:hover { background: #ff1a1a; transform: scale(1.05); }
+        .modal button:hover { 
+            background: #ff1a1a; 
+            transform: scale(1.05); 
+        }
+        .modal button:active {
+            transform: scale(0.98);
+        }
     </style>
 </head>
 <body>
@@ -79,19 +119,90 @@
         const overlay = document.getElementById('exit-overlay');
         const cancelBtn = document.getElementById('cancel-exit');
 
+        // Debounce and throttle configuration
+        let mouseOutTriggered = false;
+        const MOUSE_OUT_COOLDOWN = 500; // 500ms cooldown between triggers
+
         // 1. The Browser-Level Warning (The final boss)
         window.addEventListener('beforeunload', (e) => {
             e.preventDefault();
             e.returnValue = ''; 
         });
 
-        // 2. Mouse-Out Detection (Triggers the custom modal)
-        document.addEventListener('mouseleave', (e) => {
-            // Only trigger if the mouse leaves through the top of the screen
-            if (e.clientY <= 0) {
-                overlay.style.display = 'flex';
+        // 2. Enhanced Mouse-Out Detection
+        document.addEventListener('mousemove', (e) => {
+            // Check if mouse is leaving from top, bottom, left, or right
+            const threshold = 5; // 5px threshold
+
+            // Top edge detection
+            if (e.clientY <= threshold && e.clientY >= -10) {
+                triggerExitModal();
+            }
+            
+            // Left/Right edge detection (alternative exits)
+            if ((e.clientX <= threshold || e.clientX >= window.innerWidth - threshold) && e.clientY > 0) {
+                // Only trigger if not already triggered recently
+                if (!mouseOutTriggered) {
+                    triggerExitModal();
+                }
             }
         });
 
+        // Alternative detection: mouseleave on document
+        document.addEventListener('mouseleave', (e) => {
+            // Improved detection - any direction
+            if (e.clientY < 0 || e.clientX < 0 || e.clientX > window.innerWidth) {
+                triggerExitModal();
+            }
+        });
+
+        // Pointer events for better mobile/tablet support
+        document.addEventListener('pointerleave', (e) => {
+            if (e.clientY < 0 || e.clientX < 0 || e.clientX > window.innerWidth) {
+                triggerExitModal();
+            }
+        });
+
+        // Window focus loss detection
+        window.addEventListener('blur', () => {
+            // Optionally trigger on window blur (tab switch)
+            // Uncomment if needed: triggerExitModal();
+        });
+
+        // Function to trigger the exit modal with cooldown
+        function triggerExitModal() {
+            if (!mouseOutTriggered) {
+                overlay.style.display = 'flex';
+                mouseOutTriggered = true;
+
+                // Reset cooldown after specified time
+                setTimeout(() => {
+                    mouseOutTriggered = false;
+                }, MOUSE_OUT_COOLDOWN);
+            }
+        }
+
         // 3. The "Cancel" Button
-        // This hides the modal and lets
+        cancelBtn.addEventListener('click', () => {
+            overlay.style.display = 'none';
+            mouseOutTriggered = false; // Reset the cooldown
+        });
+
+        // 4. Close modal when clicking outside (optional)
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.style.display = 'none';
+                mouseOutTriggered = false;
+            }
+        });
+
+        // 5. Escape key handling (optional)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && overlay.style.display === 'flex') {
+                overlay.style.display = 'none';
+                mouseOutTriggered = false;
+            }
+        });
+    </script>
+</body>
+</html>
