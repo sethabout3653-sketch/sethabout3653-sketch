@@ -3,8 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clever | Portal</title>
-  <link rel="icon" type="image/png" href="poop.png">
   <style>
     html, body {
       margin: 0;
@@ -46,17 +44,14 @@
       return /(?:^|,)\s*(width|height|left|top|menubar|toolbar|location|status|resizable|scrollbars)\s*=/.test(f);
     }
 
-    // Block or neuter window.open calls
     window.open = function(url, target, features) {
       try {
         if (isSuspiciousUrl(url)) return null;
 
-        // Treat tiny/feature-heavy windows as popup attempts.
         if (isLikelyPopupFeatures(features)) {
           return null;
         }
 
-        // Optionally block blank target windows from ad scripts.
         if (target && suspiciousWindowNames.test(String(target))) {
           return null;
         }
@@ -67,7 +62,6 @@
       }
     };
 
-    // Block common redirect tricks triggered by user interaction.
     const blockEvent = (e) => {
       const t = e.target;
       if (!t) return;
@@ -79,7 +73,6 @@
         return;
       }
 
-      // Prevent modified clicks on links that try to open popups/redirects.
       if (t.closest?.('a[target="_blank"]')) {
         const rel = t.closest('a')?.getAttribute('rel') || '';
         if (!/noopener|noreferrer/i.test(rel)) {
@@ -92,7 +85,6 @@
       document.addEventListener(evt, blockEvent, true);
     });
 
-    // Stop top-level javascript: navigation attempts from location changes.
     const origAssign = Location.prototype.assign;
     const origReplace = Location.prototype.replace;
 
@@ -106,7 +98,6 @@
       return origReplace.call(this, url);
     };
 
-    // Expose a small API for debugging.
     window.popupRedirectBlocker = {
       enabled: true,
       restore() {
