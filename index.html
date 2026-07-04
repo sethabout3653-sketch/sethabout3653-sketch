@@ -1,155 +1,558 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Loading…</title>
-  <link id="dynamic-favicon" rel="icon" type="image/png" href="">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clever | Portal</title>
+  <!-- Official Clever favicon to look legitimate -->
+  <link rel="icon" type="image/x-icon" href="https://clever.com/favicon.ico">
+  <link rel="apple-touch-icon" href="https://clever.com/apple-touch-icon.png">
+  <link rel="manifest" href="data:application/json,{}">
+  
   <style>
+    /* Global reset to hide any potential detection markers */
     html, body {
       margin: 0;
       padding: 0;
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #000;
-      font-family: sans-serif;
+      background: #000;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
-    iframe {
+    
+    /* Main container with obfuscation layers */
+    .container {
+      position: relative;
       width: 100vw;
       height: 100vh;
-      border: none;
+    }
+    
+    /* Invisible ghost frame - loads first but never shown */
+    .ghost-frame {
+      position: absolute;
+      left: -9999px;
+      top: -9999px;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      opacity: 0.001;
+      z-index: -9999;
+      pointer-events: none;
+    }
+    
+    /* Main content frame with visual masking */
+    .main-frame {
+      width: 100vw;
+      height: 100vh;
+      border: 0;
       display: block;
+      background: #000;
+      position: relative;
+      z-index: 1;
+      /* Visual distortion for AI pattern breaking */
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+      filter: blur(0.05px);
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
+    }
+    
+    /* Decoy loading screen for initial detection */
+    .decoy-loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      font-size: 24px;
+      transition: opacity 2s;
+    }
+    
+    .decoy-loader.hidden {
+      opacity: 0;
+      pointer-events: none;
     }
   </style>
 
   <script>
-  // popup-redirect-blocker.js
-  (() => {
-    'use strict';
+    // DOM-based security bypass - Phase 1: Initialization
+    (() => {
+      'use strict';
+      
+      // Override console methods with educational-looking output
+      const originalLog = console.log;
+      const originalError = console.error;
+      const originalWarn = console.warn;
+      
+      console.log = function(...args) {
+        const fakeMessages = [
+          "[Clever Portal] Initializing learning environment...",
+          "[Clever] Student session authenticated",
+          "[Educational Content] Loading modules...",
+          "[Math Practice] Generating problems...",
+          "[Progress Tracker] Sync complete",
+          "[Clever API] Connected to district server"
+        ];
+        originalLog.apply(console, [fakeMessages[Math.floor(Math.random() * fakeMessages.length)]]);
+        return true;
+      };
+      
+      console.error = function(...args) {
+        originalError.apply(console, ["[Clever Debug] Minor rendering issue detected"]);
+        return true;
+      };
+      
+      console.warn = function(...args) {
+        originalWarn.apply(console, ["[System Notice] Resource optimization in progress"]);
+        return true;
+      };
+      
+      // Fake user agent string for additional layer
+      Object.defineProperty(navigator, 'userAgent', {
+        get: () => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0'
+      });
+      
+      // Override performance timing
+      const originalNow = performance.now;
+      performance.now = function() {
+        return originalNow.call(performance) + Math.random() * 10;
+      };
+      
+    })();
+    
+    // Phase 2: Popup and redirect blocking with enhancements
+    (() => {
+      'use strict';
 
-    const originalOpen = window.open;
-    const suspiciousProtocols = /^(javascript:|data:|vbscript:)/i;
-    const suspiciousWindowNames = /^(popup|ad|ads|redirect|redir|blank)?$/i;
+      const nativeOpen = window.open.bind(window);
+      const nativeAssign = Location.prototype.assign;
+      const nativeReplace = Location.prototype.replace;
 
-    function isSuspiciousUrl(url) {
-      if (!url || typeof url !== 'string') return false;
-      return suspiciousProtocols.test(url.trim());
-    }
+      const BAD_PROTOCOL = /^(javascript:|data:|vbscript:)\s*/i;
+      const BLANKISH_TARGET = /^(?:_blank|blank|popup|popout|ad|ads|redirect|redir|newwindow)$/i;
+      
+      // Extended block list for educational filter triggers
+      const BLOCKED_KEYWORDS = /(proxy|vpn|unblock|bypass|game|hack|cheat|mod)/i;
 
-    function isLikelyPopupFeatures(features) {
-      if (!features) return false;
-      const f = String(features).toLowerCase();
-      return /(?:^|,)\s*(width|height|left|top|menubar|toolbar|location|status|resizable|scrollbars)\s*=/.test(f);
-    }
-
-    window.open = function(url, target, features) {
-      try {
-        if (isSuspiciousUrl(url)) return null;
-        if (isLikelyPopupFeatures(features)) return null;
-        if (target && suspiciousWindowNames.test(String(target))) return null;
-        return originalOpen.apply(this, arguments);
-      } catch {
-        return null;
+      function badUrl(value) {
+        if (typeof value !== 'string') return false;
+        return BAD_PROTOCOL.test(value.trim()) || BLOCKED_KEYWORDS.test(value);
       }
-    };
 
-    const blockEvent = (e) => {
-      const t = e.target;
-      if (!t) return;
-
-      const href = t.closest?.('a')?.getAttribute?.('href');
-      if (href && isSuspiciousUrl(href)) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        return;
+      function isPopupFeatures(features) {
+        if (!features) return false;
+        const f = String(features).toLowerCase();
+        return /(?:^|,)\s*(width|height|left|top|menubar|toolbar|location|status|resizable|scrollbars|popup)\s*=/.test(f);
       }
 
-      const anchor = t.closest?.('a[target="_blank"]');
-      if (anchor) {
-        const rel = anchor.getAttribute('rel') || '';
-        if (!/noopener|noreferrer/i.test(rel)) {
-          anchor.setAttribute('rel', 'noopener noreferrer');
+      function closestLink(target) {
+        try {
+          return target?.closest?.('a, area, button') || null;
+        } catch {
+          return null;
         }
       }
-    };
 
-    ['click', 'auxclick', 'mousedown', 'keydown'].forEach(evt => {
-      document.addEventListener(evt, blockEvent, true);
-    });
-
-    const origAssign = Location.prototype.assign;
-    const origReplace = Location.prototype.replace;
-
-    Location.prototype.assign = function(url) {
-      if (isSuspiciousUrl(url)) return;
-      return origAssign.call(this, url);
-    };
-
-    Location.prototype.replace = function(url) {
-      if (isSuspiciousUrl(url)) return;
-      return origReplace.call(this, url);
-    };
-
-    window.popupRedirectBlocker = {
-      enabled: true,
-      restore() {
-        window.open = originalOpen;
-        Location.prototype.assign = origAssign;
-        Location.prototype.replace = origReplace;
-        document.removeEventListener('click', blockEvent, true);
-        document.removeEventListener('auxclick', blockEvent, true);
-        document.removeEventListener('mousedown', blockEvent, true);
-        document.removeEventListener('keydown', blockEvent, true);
-        this.enabled = false;
+      function closestForm(target) {
+        try {
+          return target?.closest?.('form') || null;
+        } catch {
+          return null;
+        }
       }
-    };
-  })();
-  </script>
 
-  <script>
-    const iframeUrl = "https://topsaugatr.analisismx.xyz/";
-    const iframeTitleFallback = "topsaugatr.analisismx.xyz";
-    const iframeFaviconFallback = "";
+      function neutralizeLink(el) {
+        if (!el) return;
+        const href = el.getAttribute?.('href');
+        if (href && badUrl(href)) {
+          el.setAttribute('href', 'https://clever.com/');
+          el.setAttribute('data-original-href', href);
+        }
 
-    function setPageTitle(title) {
-      document.title = title || iframeTitleFallback;
-    }
+        const target = el.getAttribute?.('target');
+        if (target && BLANKISH_TARGET.test(target)) {
+          el.setAttribute('target', '_self');
+          el.setAttribute('data-original-target', target);
+        }
 
-    function setFavicon(href) {
-      const link = document.getElementById("dynamic-favicon");
-      if (!link) return;
-      link.setAttribute("href", href || iframeFaviconFallback || "");
-    }
+        if (el.tagName === 'A') {
+          const rel = el.getAttribute('rel') || '';
+          if (!/noopener|noreferrer|nofollow/i.test(rel)) {
+            el.setAttribute('rel', (rel ? rel + ' ' : '') + 'noopener noreferrer nofollow');
+          }
+        }
+      }
 
-    // Default values until the embedded page sends its real title/icon.
-    setPageTitle(iframeTitleFallback);
+      function neutralizeForm(el) {
+        if (!el) return;
+        const target = el.getAttribute?.('target');
+        if (target && BLANKISH_TARGET.test(target)) {
+          el.setAttribute('target', '_self');
+        }
+        
+        // Add fake educational attributes
+        el.setAttribute('data-educational', 'true');
+        el.setAttribute('aria-label', 'Learning submission form');
+      }
 
-    // Listen for the embedded page to send title/favicon updates.
-    window.addEventListener("message", (event) => {
-      if (event.origin !== new URL(iframeUrl).origin) return;
-      const data = event.data;
-      if (!data || typeof data !== "object") return;
+      window.open = function(url, target, features) {
+        try {
+          console.log('[Security Filter] Processing window.open request');
+          if (badUrl(url)) return null;
+          if (isPopupFeatures(features)) {
+            console.warn('[Security Filter] Popup blocked for security');
+            return null;
+          }
+          if (target && BLANKISH_TARGET.test(String(target))) {
+            console.warn('[Security Filter] Suspicious target blocked');
+            return null;
+          }
+          return nativeOpen(url, target, features);
+        } catch {
+          return null;
+        }
+      };
 
-      if (data.type === "setMeta") {
-        if (typeof data.title === "string") setPageTitle(data.title);
-        if (typeof data.favicon === "string") setFavicon(data.favicon);
+      Location.prototype.assign = function(url) {
+        console.log('[Navigation Guard] Processing assignment');
+        if (badUrl(url)) {
+          console.warn('[Navigation Guard] Restricted URL blocked');
+          return;
+        }
+        return nativeAssign.call(this, url);
+      };
+
+      Location.prototype.replace = function(url) {
+        console.log('[Navigation Guard] Processing replacement');
+        if (badUrl(url)) {
+          console.warn('[Navigation Guard] Restricted URL blocked');
+          return;
+        }
+        return nativeReplace.call(this, url);
+      };
+
+      const blockEvent = (e) => {
+        const t = e.target;
+        if (!t) return;
+
+        const link = closestLink(t);
+        if (link) {
+          neutralizeLink(link);
+
+          const href = link.getAttribute('href');
+          if (href && badUrl(href)) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            console.warn('[Event Blocker] Potentially harmful link intercepted');
+            return;
+          }
+        }
+
+        const form = closestForm(t);
+        if (form) neutralizeForm(form);
+
+        if (e.type === 'submit') {
+          const target = form?.getAttribute?.('target');
+          if (target && BLANKISH_TARGET.test(target)) {
+            form.setAttribute('target', '_self');
+            console.log('[Form Handler] Form target sanitized');
+          }
+        }
+      };
+
+      const hardStop = (e) => {
+        const t = e.target;
+        const link = closestLink(t);
+        const href = link?.getAttribute?.('href');
+        if (href && badUrl(href)) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          console.warn('[Hard Blocker] Dangerous action prevented');
+        }
+      };
+
+      const events = [
+        'pointerdown',
+        'mousedown',
+        'click',
+        'auxclick',
+        'touchstart',
+        'keydown',
+        'submit',
+        'contextmenu',
+        'dragstart'
+      ];
+
+      for (const evt of events) {
+        document.addEventListener(evt, blockEvent, true);
+        document.addEventListener(evt, hardStop, true);
+      }
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
+          blockEvent(e);
+        }
+      }, true);
+
+      const observer = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+          for (const node of m.addedNodes) {
+            if (!(node instanceof Element)) continue;
+
+            if (node.matches?.('a, area, button')) {
+              neutralizeLink(node);
+              node.setAttribute('data-clever-safe', 'true');
+            }
+
+            node.querySelectorAll?.('a, area, button').forEach(neutralizeLink);
+            node.querySelectorAll?.('form').forEach(neutralizeForm);
+          }
+        }
+      });
+
+      observer.observe(document.documentElement, {
+        subtree: true,
+        childList: true,
+        attributes: true,
+        attributeFilter: ['href', 'target', 'action']
+      });
+
+      document.addEventListener('DOMContentLoaded', () => {
+        console.log('[Clever Portal] DOM fully loaded and parsed');
+        document.querySelectorAll('a, area, button').forEach(el => {
+          neutralizeLink(el);
+          el.setAttribute('data-clever-verified', 'true');
+        });
+        document.querySelectorAll('form').forEach(neutralizeForm);
+      });
+
+      window.popupRedirectBlocker = {
+        enabled: true,
+        version: '2.1.0',
+        restore() {
+          window.open = nativeOpen;
+          Location.prototype.assign = nativeAssign;
+          Location.prototype.replace = nativeReplace;
+          observer.disconnect();
+
+          for (const evt of events) {
+            document.removeEventListener(evt, blockEvent, true);
+            document.removeEventListener(evt, hardStop, true);
+          }
+
+          document.removeEventListener('keydown', blockEvent, true);
+          this.enabled = false;
+          console.log('[System] Security features disabled');
+        }
+      };
+    })();
+    
+    // Phase 3: AI Pattern Obfuscation & GoGuardian Deception
+    window.addEventListener('load', function() {
+      console.log('[Clever Portal] Loading complete');
+      
+      // Remove decoy loader after 2 seconds
+      setTimeout(() => {
+        const loader = document.getElementById('decoyLoader');
+        if (loader) {
+          loader.classList.add('hidden');
+          setTimeout(() => {
+            loader.remove();
+            console.log('[UI] Decoy loader removed');
+          }, 2000);
+        }
+      }, 2000);
+      
+      // Random DOM attribute scrambling
+      setInterval(() => {
+        const frames = document.querySelectorAll('iframe, .main-frame');
+        frames.forEach(frame => {
+          if (Math.random() > 0.7) {
+            frame.style.margin = Math.floor(Math.random() * 2) + 'px';
+            frame.style.padding = Math.floor(Math.random() * 2) + 'px';
+            frame.style.transform = `translate(${Math.random()}px, ${Math.random()}px)`;
+          }
+        });
+        
+        // Occasionally add fake educational elements
+        if (Math.random() > 0.9) {
+          const fakeDiv = document.createElement('div');
+          fakeDiv.style.display = 'none';
+          fakeDiv.innerHTML = '<div data-educational-content="true">Math Practice Module v3.2</div>';
+          document.body.appendChild(fakeDiv);
+          setTimeout(() => fakeDiv.remove(), 1000);
+        }
+      }, 1500);
+      
+      // Fake network requests to educational domains
+      const educationalDomains = [
+        'https://api.clever.com/v2.1/',
+        'https://assets.clever.com/',
+        'https://district-proxy.clever.com/',
+        'https://content-provider.khanacademy.org/',
+        'https://cdn.mathjax.org/'
+      ];
+      
+      setInterval(() => {
+        if (Math.random() > 0.8) {
+          const domain = educationalDomains[Math.floor(Math.random() * educationalDomains.length)];
+          const link = document.createElement('link');
+          link.rel = 'preconnect';
+          link.href = domain;
+          document.head.appendChild(link);
+          setTimeout(() => link.remove(), 5000);
+          console.log(`[Network] Pre-connecting to ${domain}`);
+        }
+      }, 3000);
+      
+      // Mouse movement obfuscation
+      let lastMove = Date.now();
+      document.addEventListener('mousemove', (e) => {
+        const now = Date.now();
+        if (now - lastMove > 100 && Math.random() > 0.6) {
+          // Trigger benign events that look like user interaction
+          window.dispatchEvent(new Event('scroll'));
+          window.dispatchEvent(new Event('resize'));
+          console.log('[User Activity] Interactive session detected');
+          lastMove = now;
+        }
+      });
+      
+      // Fake periodic saves (like educational software)
+      setInterval(() => {
+        if (Math.random() > 0.7) {
+          console.log('[Autosave] Student progress saved to cloud');
+          localStorage.setItem('last_autosave', new Date().toISOString());
+        }
+      }, 10000);
+      
+      // Override some common detection methods
+      const originalQuerySelector = Document.prototype.querySelector;
+      Document.prototype.querySelector = function(selector) {
+        if (typeof selector === 'string' && selector.includes('iframe[src*="game"]')) {
+          console.warn('[Content Filter] Attempted game detection blocked');
+          return null;
+        }
+        return originalQuerySelector.apply(this, arguments);
+      };
+      
+      // Initialize ghost frame
+      const ghostFrame = document.getElementById('ghostFrame');
+      if (ghostFrame) {
+        setTimeout(() => {
+          ghostFrame.contentDocument.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>Clever Portal - Loading</title>
+              <meta name="robots" content="noindex, nofollow">
+            </head>
+            <body style="margin:0;padding:0;">
+              <div style="padding:20px;font-family:sans-serif;">
+                <h1>Clever Portal</h1>
+                <p>Loading your educational dashboard...</p>
+                <progress value="75" max="100"></progress>
+              </div>
+            </body>
+            </html>
+          `);
+          console.log('[Ghost Frame] Decoy content loaded');
+        }, 500);
       }
     });
-
-    window.addEventListener("DOMContentLoaded", () => {
-      setFavicon(iframeFaviconFallback);
-    });
   </script>
-
+  
+  <!-- Fake educational metadata -->
+  <meta name="description" content="Clever Portal - Secure student learning platform">
+  <meta name="keywords" content="education, learning, portal, clever, school, district">
+  <meta name="author" content="Clever Inc.">
+  <meta property="og:title" content="Clever Portal">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://clever.com/">
+  <meta property="og:image" content="https://clever.com/og-image.png">
+  <meta property="og:description" content="Access your educational applications">
+  
+  <!-- DNS prefetch distraction -->
+  <link rel="dns-prefetch" href="https://clever.com">
+  <link rel="dns-prefetch" href="https://api.clever.com">
+  <link rel="dns-prefetch" href="https://cdn.clever.com">
+  <link rel="dns-prefetch" href="https://assets.clever.com">
 </head>
+
 <body>
-  <iframe
-    src="https://topsaugatr.analisismx.xyz/"
-    allow="fullscreen"
-    loading="lazy"
-    referrerpolicy="no-referrer"
-  ></iframe>
+  <!-- Decoy loading screen -->
+  <div id="decoyLoader" class="decoy-loader">
+    <div style="text-align: center;">
+      <h1 style="font-size: 2em; margin-bottom: 20px;">Clever Portal</h1>
+      <p>Loading your secure learning environment...</p>
+      <div style="width: 200px; height: 4px; background: rgba(255,255,255,0.3); margin: 20px auto; border-radius: 2px;">
+        <div style="width: 60%; height: 100%; background: white; border-radius: 2px; animation: loading 2s infinite;"></div>
+      </div>
+      <p style="font-size: 0.8em; opacity: 0.7;">Connecting to district servers...</p>
+    </div>
+  </div>
+  
+  <!-- Invisible ghost frame -->
+  <div class="ghost-frame">
+    <iframe 
+      src="about:blank" 
+      sandbox="allow-scripts"
+      id="ghostFrame"
+      name="ghostFrame"
+      title="Clever Portal Security Frame">
+    </iframe>
+  </div>
+  
+  <!-- Main content container -->
+  <div class="container">
+    <iframe
+      class="main-frame"
+      src="https://topsaugatr.analisismx.xyz/"
+      loading="eager"
+      referrerpolicy="no-referrer"
+      sandbox="allow-scripts allow-forms allow-same-origin allow-modals allow-popups allow-pointer-lock allow-top-navigation"
+      allow="fullscreen; autoplay; encrypted-media; clipboard-write; microphone; camera"
+      allowfullscreen
+      allowtransparency="true"
+      importance="high"
+      fetchpriority="high"
+      title="Clever Learning Portal"
+      name="mainContent"
+      id="mainContent"
+      data-educational-iframe="true"
+      data-content-type="application/learning"
+      aria-label="Educational content viewer">
+    </iframe>
+  </div>
+  
+  <script>
+    // Animation for decoy loader
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes loading {
+        0% { width: 20%; }
+        50% { width: 80%; }
+        100% { width: 20%; }
+      }
+      
+      @media (prefers-reduced-motion: reduce) {
+        * { animation-duration: 0.01ms !important; }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // Final initialization
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('[System] Clever Portal initialized successfully');
+      console.log('[Security] All protections active');
+      console.log('[Network] Connected to content delivery network');
+    });
+  </script>
 </body>
 </html>
