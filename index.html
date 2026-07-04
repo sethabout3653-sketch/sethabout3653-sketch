@@ -22,6 +22,106 @@
       display: block;
     }
   </style>
+
+  <script>
+  // popup-redirect-blocker.js
+  // Blocks common popup/redirect patterns by neutering window.open and detecting
+  // suspicious navigation attempts on click/keydown events.
+
+  (() => {
+    'use strict';
+
+    const originalOpen = window.open;
+    const suspiciousProtocols = /^(javascript:|data:|vbscript:)/i;
+    const suspiciousWindowNames = /^(popup|ad|ads|redirect|redir|blank)?$/i;
+
+    function isSuspiciousUrl(url) {
+      if (!url || typeof url !== 'string') return false;
+      return suspiciousProtocols.test(url.trim());
+    }
+
+    function isLikelyPopupFeatures(features) {
+      if (!features) return false;
+      const f = String(features).toLowerCase();
+      return /(?:^|,)\s*(width|height|left|top|menubar|toolbar|location|status|resizable|scrollbars)\s*=/.test(f);
+    }
+
+    // Block or neuter window.open calls
+    window.open = function(url, target, features) {
+      try {
+        if (isSuspiciousUrl(url)) return null;
+
+        // Treat tiny/feature-heavy windows as popup attempts.
+        if (isLikelyPopupFeatures(features)) {
+          return null;
+        }
+
+        // Optionally block blank target windows from ad scripts.
+        if (target && suspiciousWindowNames.test(String(target))) {
+          return null;
+        }
+
+        return originalOpen.apply(this, arguments);
+      } catch {
+        return null;
+      }
+    };
+
+    // Block common redirect tricks triggered by user interaction.
+    const blockEvent = (e) => {
+      const t = e.target;
+      if (!t) return;
+
+      const href = t.closest?.('a')?.getAttribute?.('href');
+      if (href && isSuspiciousUrl(href)) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        return;
+      }
+
+      // Prevent modified clicks on links that try to open popups/redirects.
+      if (t.closest?.('a[target="_blank"]')) {
+        const rel = t.closest('a')?.getAttribute('rel') || '';
+        if (!/noopener|noreferrer/i.test(rel)) {
+          t.closest('a')?.setAttribute('rel', 'noopener noreferrer');
+        }
+      }
+    };
+
+    ['click', 'auxclick', 'mousedown', 'keydown'].forEach(evt => {
+      document.addEventListener(evt, blockEvent, true);
+    });
+
+    // Stop top-level javascript: navigation attempts from location changes.
+    const origAssign = Location.prototype.assign;
+    const origReplace = Location.prototype.replace;
+
+    Location.prototype.assign = function(url) {
+      if (isSuspiciousUrl(url)) return;
+      return origAssign.call(this, url);
+    };
+
+    Location.prototype.replace = function(url) {
+      if (isSuspiciousUrl(url)) return;
+      return origReplace.call(this, url);
+    };
+
+    // Expose a small API for debugging.
+    window.popupRedirectBlocker = {
+      enabled: true,
+      restore() {
+        window.open = originalOpen;
+        Location.prototype.assign = origAssign;
+        Location.prototype.replace = origReplace;
+        document.removeEventListener('click', blockEvent, true);
+        document.removeEventListener('auxclick', blockEvent, true);
+        document.removeEventListener('mousedown', blockEvent, true);
+        document.removeEventListener('keydown', blockEvent, true);
+        this.enabled = false;
+      }
+    };
+  })();
+  </script>
 </head>
 <body>
   <iframe src="https://topsaugatr.analisismx.xyz/" allow="fullscreen" loading="lazy"></iframe>
