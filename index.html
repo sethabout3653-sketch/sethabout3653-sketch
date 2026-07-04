@@ -1,8 +1,11 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loading…</title>
+  <link id="dynamic-favicon" rel="icon" type="image/png" href="">
   <style>
     html, body {
       margin: 0;
@@ -23,9 +26,6 @@
 
   <script>
   // popup-redirect-blocker.js
-  // Blocks common popup/redirect patterns by neutering window.open and detecting
-  // suspicious navigation attempts on click/keydown events.
-
   (() => {
     'use strict';
 
@@ -47,15 +47,8 @@
     window.open = function(url, target, features) {
       try {
         if (isSuspiciousUrl(url)) return null;
-
-        if (isLikelyPopupFeatures(features)) {
-          return null;
-        }
-
-        if (target && suspiciousWindowNames.test(String(target))) {
-          return null;
-        }
-
+        if (isLikelyPopupFeatures(features)) return null;
+        if (target && suspiciousWindowNames.test(String(target))) return null;
         return originalOpen.apply(this, arguments);
       } catch {
         return null;
@@ -73,10 +66,11 @@
         return;
       }
 
-      if (t.closest?.('a[target="_blank"]')) {
-        const rel = t.closest('a')?.getAttribute('rel') || '';
+      const anchor = t.closest?.('a[target="_blank"]');
+      if (anchor) {
+        const rel = anchor.getAttribute('rel') || '';
         if (!/noopener|noreferrer/i.test(rel)) {
-          t.closest('a')?.setAttribute('rel', 'noopener noreferrer');
+          anchor.setAttribute('rel', 'noopener noreferrer');
         }
       }
     };
@@ -113,8 +107,49 @@
     };
   })();
   </script>
+
+  <script>
+    const iframeUrl = "https://topsaugatr.analisismx.xyz/";
+    const iframeTitleFallback = "topsaugatr.analisismx.xyz";
+    const iframeFaviconFallback = "";
+
+    function setPageTitle(title) {
+      document.title = title || iframeTitleFallback;
+    }
+
+    function setFavicon(href) {
+      const link = document.getElementById("dynamic-favicon");
+      if (!link) return;
+      link.setAttribute("href", href || iframeFaviconFallback || "");
+    }
+
+    // Default values until the embedded page sends its real title/icon.
+    setPageTitle(iframeTitleFallback);
+
+    // Listen for the embedded page to send title/favicon updates.
+    window.addEventListener("message", (event) => {
+      if (event.origin !== new URL(iframeUrl).origin) return;
+      const data = event.data;
+      if (!data || typeof data !== "object") return;
+
+      if (data.type === "setMeta") {
+        if (typeof data.title === "string") setPageTitle(data.title);
+        if (typeof data.favicon === "string") setFavicon(data.favicon);
+      }
+    });
+
+    window.addEventListener("DOMContentLoaded", () => {
+      setFavicon(iframeFaviconFallback);
+    });
+  </script>
+
 </head>
 <body>
-  <iframe src="https://topsaugatr.analisismx.xyz/" allow="fullscreen" loading="lazy"></iframe>
+  <iframe
+    src="https://topsaugatr.analisismx.xyz/"
+    allow="fullscreen"
+    loading="lazy"
+    referrerpolicy="no-referrer"
+  ></iframe>
 </body>
 </html>
