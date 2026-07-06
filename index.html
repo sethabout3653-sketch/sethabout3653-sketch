@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Clever | Loading</title>
+<link id="favicon" rel="icon" type="image/png" href="poop.png">
 
 <style>
 :root{
@@ -196,12 +197,26 @@ iframe{
 
 <script>
 const URL = "https://classroom.poloniacruz.com/";
+const LOADING_TITLE = "Clever | Loading";
+const PORTAL_TITLE = "Clever | Portal";
+const FAVICON_PATH = "poop.png";
 
 const loader = document.getElementById("loader");
 const app = document.getElementById("app");
 const frame = document.getElementById("frame");
+const favicon = document.getElementById("favicon");
+
+function setFavicon(path) {
+    if (favicon) favicon.href = path;
+}
+
+document.title = LOADING_TITLE;
+setFavicon(FAVICON_PATH);
 
 setTimeout(() => {
+    document.title = PORTAL_TITLE;
+    setFavicon(FAVICON_PATH);
+
     loader.style.display = "none";
     app.style.display = "block";
     frame.src = URL;
