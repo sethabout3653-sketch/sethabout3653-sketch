@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
 <title>Clever | Loading</title>
-<link id="favicon" rel="icon" type="image/png" href="poop.png">
+<link id="favicon" rel="icon" type="image/png" href="poop.png" />
 
 <style>
 :root{
@@ -38,7 +38,6 @@ html,body{
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 }
 
-/* LOADER */
 .loader{
     position:fixed;
     inset:0;
@@ -120,7 +119,6 @@ svg{
     100%{transform:translate(240px,310px) rotate(-48deg);}
 }
 
-/* APP */
 .app{
     position:fixed;
     inset:0;
@@ -131,37 +129,33 @@ iframe{
     width:100%;
     height:100%;
     border:0;
+    display:block;
+    background:#fff;
 }
 </style>
 </head>
 
 <body>
-
 <div class="loader" id="loader">
     <div class="logo">Clever</div>
 
     <div class="scene">
         <svg viewBox="0 0 1200 420">
-
-            <!-- spine -->
             <path class="book-spine"
                   d="M160 326 C300 314,430 312,600 312 C770 312,900 314,1040 326 L1040 338 C900 340,770 342,600 342 C430 342,300 340,160 338 Z"/>
 
-            <!-- pages -->
             <path class="page"
                   d="M124 322 L266 252 L585 252 L600 268 L600 336 L160 336 Z"/>
 
             <path class="page"
                   d="M600 268 L615 252 L934 252 L1076 322 L1040 336 L600 336 Z"/>
 
-            <!-- shadows -->
             <path class="page-shadow"
                   d="M124 322 L266 252 L585 252 L585 272 L185 272 Z"/>
 
             <path class="page-shadow"
                   d="M615 252 L934 252 L1010 290 L1010 272 L615 272 Z"/>
 
-            <!-- outlines -->
             <path class="book-outline"
                   d="M124 322 L266 252 L585 252 L600 268 L600 336 L160 336 Z"/>
 
@@ -176,7 +170,6 @@ iframe{
             <line class="page-line" x1="220" y1="307" x2="520" y2="307"/>
             <line class="page-line" x1="680" y1="307" x2="980" y2="307"/>
 
-            <!-- pencil -->
             <g class="pencil">
                 <g transform="rotate(-48)">
                     <polygon points="0,0 18,-6 18,6" fill="var(--tip)"/>
@@ -186,13 +179,19 @@ iframe{
                     <rect x="144" y="-15" width="28" height="30" rx="7" fill="var(--eraser)"/>
                 </g>
             </g>
-
         </svg>
     </div>
 </div>
 
 <div class="app" id="app">
-    <iframe id="frame" src=""></iframe>
+    <iframe
+        id="frame"
+        src=""
+        sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-pointer-lock allow-downloads allow-top-navigation-by-user-activation"
+        allow="fullscreen; autoplay; clipboard-read; clipboard-write"
+        allowfullscreen
+        referrerpolicy="no-referrer">
+    </iframe>
 </div>
 
 <script>
@@ -200,6 +199,7 @@ const URL = "https://classroom.poloniacruz.com/";
 const LOADING_TITLE = "Clever | Loading";
 const PORTAL_TITLE = "Clever | Portal";
 const FAVICON_PATH = "poop.png";
+const LOAD_DELAY_MS = 6000;
 
 const loader = document.getElementById("loader");
 const app = document.getElementById("app");
@@ -208,6 +208,100 @@ const favicon = document.getElementById("favicon");
 
 function setFavicon(path) {
     if (favicon) favicon.href = path;
+}
+
+async function requestFullscreen() {
+    const el = document.documentElement;
+    try {
+        if (document.fullscreenElement) return;
+        if (el.requestFullscreen) return await el.requestFullscreen();
+        if (el.webkitRequestFullscreen) return await el.webkitRequestFullscreen();
+        if (el.msRequestFullscreen) return await el.msRequestFullscreen();
+    } catch (_) {}
+}
+
+function exitFullscreen() {
+    try {
+        if (document.fullscreenElement && document.exitFullscreen) {
+            return document.exitFullscreen();
+        }
+        if (document.webkitFullscreenElement && document.webkitExitFullscreen) {
+            return document.webkitExitFullscreen();
+        }
+        if (document.msFullscreenElement && document.msExitFullscreen) {
+            return document.msExitFullscreen();
+        }
+    } catch (_) {}
+}
+
+let fullscreenAttempted = false;
+function tryFullscreenOnce() {
+    if (fullscreenAttempted) return;
+    fullscreenAttempted = true;
+    requestFullscreen();
+}
+
+document.addEventListener("pointerdown", tryFullscreenOnce, { passive: true, once: true });
+document.addEventListener("keydown", tryFullscreenOnce, { once: true });
+document.addEventListener("touchstart", tryFullscreenOnce, { passive: true, once: true });
+
+document.addEventListener("keydown", (e) => {
+    if (e.key === "F11") {
+        e.preventDefault();
+        if (document.fullscreenElement) exitFullscreen();
+        else requestFullscreen();
+    }
+});
+
+/* Basic shell-level blocking only. Cannot remove inside cross-origin iframe. */
+const BLOCKED_PARTS = [
+    "doubleclick",
+    "googlesyndication",
+    "adservice",
+    "/ads",
+    "bannerads",
+    "taboola",
+    "outbrain",
+    "criteo",
+    "popads",
+    "adnxs"
+];
+
+function looksLikeAdUrl(url) {
+    if (!url) return false;
+    const lower = String(url).toLowerCase();
+    return BLOCKED_PARTS.some(part => lower.includes(part));
+}
+
+const nativeOpen = window.open;
+window.open = function(url, name, features) {
+    if (looksLikeAdUrl(url)) return null;
+    return nativeOpen ? nativeOpen.call(window, url, name, features) : null;
+};
+
+function removeCommonOverlayNodes() {
+    const selectors = [
+        '[id*="ad"]',
+        '[class*="ad"]',
+        'iframe[src*="ad"]',
+        'iframe[src*="doubleclick"]',
+        'iframe[src*="googlesyndication"]'
+    ];
+
+    document.querySelectorAll(selectors.join(",")).forEach(el => {
+        const tag = (el.tagName || "").toLowerCase();
+        const id = (el.id || "").toLowerCase();
+        const cls = (el.className || "").toString().toLowerCase();
+
+        const isLikelyAd =
+            tag === "iframe" ||
+            id.includes("ad") ||
+            cls.includes("ad");
+
+        if (isLikelyAd) {
+            try { el.remove(); } catch (_) {}
+        }
+    });
 }
 
 document.title = LOADING_TITLE;
@@ -220,8 +314,10 @@ setTimeout(() => {
     loader.style.display = "none";
     app.style.display = "block";
     frame.src = URL;
-}, 6000);
-</script>
 
+    removeCommonOverlayNodes();
+    setInterval(removeCommonOverlayNodes, 2500);
+}, LOAD_DELAY_MS);
+</script>
 </body>
 </html>
