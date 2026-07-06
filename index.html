@@ -23,6 +23,10 @@
     --metal:#d6dbe3;
     --wood:#f7d4a1;
     --tip:#000;
+
+    --loading-time:6000ms;
+    --fade-time:350ms;
+    --pencil-speed:4.1s;
 }
 
 *{
@@ -39,20 +43,7 @@ html,body{
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 }
 
-/* ========================= */
-/* CUSTOMIZE HERE            */
-/* ========================= */
-
-:root{
-    --loading-time:6000ms;
-    --fade-time:350ms;
-    --pencil-speed:4.1s;
-}
-
-const-placeholder{display:none}
-
-/* ========================= */
-
+/* LOADER */
 .loader{
     position:fixed;
     inset:0;
@@ -88,7 +79,6 @@ svg{
 }
 
 /* BOOK */
-
 .book-outline{
     fill:none;
     stroke:var(--book-outline);
@@ -117,7 +107,6 @@ svg{
 }
 
 /* PENCIL */
-
 .pencil{
     transform-box:fill-box;
     transform-origin:center;
@@ -125,58 +114,26 @@ svg{
 }
 
 @keyframes pencilMove{
-
-    /* left page */
-    0%{
-        transform:translate(240px,310px) rotate(-48deg);
-    }
-
-    16%{
-        transform:translate(430px,310px) rotate(-48deg);
-    }
-
-    /* lift at center */
-    26%{
-        transform:translate(545px,290px) rotate(-48deg);
-    }
-
-    33%{
-        transform:translate(600px,255px) rotate(-52deg);
-    }
-
-    /* right page */
-    46%{
-        transform:translate(690px,310px) rotate(-48deg);
-    }
-
-    68%{
-        transform:translate(930px,310px) rotate(-48deg);
-    }
-
-    /* much faster return */
-    74%{
-        transform:translate(790px,270px) rotate(-50deg);
-    }
-
-    82%{
-        transform:translate(520px,255px) rotate(-50deg);
-    }
-
-    100%{
-        transform:translate(240px,310px) rotate(-48deg);
-    }
+    0%{transform:translate(240px,310px) rotate(-48deg);}
+    16%{transform:translate(430px,310px) rotate(-48deg);}
+    26%{transform:translate(545px,290px) rotate(-48deg);}
+    33%{transform:translate(600px,255px) rotate(-52deg);}
+    46%{transform:translate(690px,310px) rotate(-48deg);}
+    68%{transform:translate(930px,310px) rotate(-48deg);}
+    74%{transform:translate(790px,270px) rotate(-50deg);}
+    82%{transform:translate(520px,255px) rotate(-50deg);}
+    100%{transform:translate(240px,310px) rotate(-48deg);}
 }
+
 .loader.fade{
     animation:fadeOut var(--fade-time) forwards;
 }
 
 @keyframes fadeOut{
-    to{
-        opacity:0;
-        visibility:hidden;
-    }
+    to{opacity:0;visibility:hidden;}
 }
 
+/* APP */
 .app{
     position:fixed;
     inset:0;
@@ -189,6 +146,7 @@ iframe{
     border:0;
 }
 
+/* fallback */
 .fallback{
     position:absolute;
     inset:0;
@@ -196,12 +154,23 @@ iframe{
     place-items:center;
     text-align:center;
     font-size:18px;
-    color:#666;
+    color:#444;
     background:#fff;
     padding:30px;
 }
+
+.fallback a{
+    margin-top:12px;
+    display:inline-block;
+    padding:10px 14px;
+    background:#4f5ef6;
+    color:#fff;
+    border-radius:8px;
+    text-decoration:none;
+}
 </style>
 </head>
+
 <body>
 
 <div class="loader" id="loader">
@@ -209,231 +178,109 @@ iframe{
     <div class="logo">Clever</div>
 
     <div class="scene">
-
         <svg viewBox="0 0 1200 420">
 
             <!-- spine -->
             <path class="book-spine"
-                  d="
-                  M160 326
-                  C300 314,430 312,600 312
-                  C770 312,900 314,1040 326
-                  L1040 338
-                  C900 340,770 342,600 342
-                  C430 342,300 340,160 338
-                  Z"/>
+                  d="M160 326 C300 314,430 312,600 312 C770 312,900 314,1040 326 L1040 338 C900 340,770 342,600 342 C430 342,300 340,160 338 Z"/>
 
-            <!-- LEFT PAGE FILLED ENTIRELY -->
+            <!-- pages -->
             <path class="page"
-                  d="
-                  M124 322
-                  L266 252
-                  L585 252
-                  L600 268
-                  L600 336
-                  L160 336
-                  Z"/>
+                  d="M124 322 L266 252 L585 252 L600 268 L600 336 L160 336 Z"/>
+
+            <path class="page"
+                  d="M600 268 L615 252 L934 252 L1076 322 L1040 336 L600 336 Z"/>
+
+            <!-- shadows -->
+            <path class="page-shadow"
+                  d="M124 322 L266 252 L585 252 L585 272 L185 272 Z"/>
 
             <path class="page-shadow"
-                  d="
-                  M124 322
-                  L266 252
-                  L585 252
-                  L585 272
-                  L185 272
-                  Z"/>
-
-            <!-- RIGHT PAGE FILLED ENTIRELY -->
-            <path class="page"
-                  d="
-                  M600 268
-                  L615 252
-                  L934 252
-                  L1076 322
-                  L1040 336
-                  L600 336
-                  Z"/>
-
-            <path class="page-shadow"
-                  d="
-                  M615 252
-                  L934 252
-                  L1010 290
-                  L1010 272
-                  L615 272
-                  Z"/>
+                  d="M615 252 L934 252 L1010 290 L1010 272 L615 272 Z"/>
 
             <!-- outlines -->
             <path class="book-outline"
-                  d="
-                  M124 322
-                  L266 252
-                  L585 252
-                  L600 268
-                  L600 336
-                  L160 336
-                  Z"/>
+                  d="M124 322 L266 252 L585 252 L600 268 L600 336 L160 336 Z"/>
 
             <path class="book-outline"
-                  d="
-                  M600 268
-                  L615 252
-                  L934 252
-                  L1076 322
-                  L1040 336
-                  L600 336
-                  Z"/>
+                  d="M600 268 L615 252 L934 252 L1076 322 L1040 336 L600 336 Z"/>
 
-            <!-- center -->
-            <rect
-                x="596"
-                y="252"
-                width="8"
-                height="84"
-                fill="#fff"/>
+            <rect x="596" y="252" width="8" height="84" fill="#fff"/>
 
-            <!-- bottom bump -->
             <path class="book-outline"
-                  d="
-                  M560 336
-                  L600 354
-                  L640 336"/>
+                  d="M560 336 L600 354 L640 336"/>
 
-            <!-- black lines -->
-            <line class="page-line"
-                  x1="220"
-                  y1="307"
-                  x2="520"
-                  y2="307"/>
-
-            <line class="page-line"
-                  x1="680"
-                  y1="307"
-                  x2="980"
-                  y2="307"/>
+            <line class="page-line" x1="220" y1="307" x2="520" y2="307"/>
+            <line class="page-line" x1="680" y1="307" x2="980" y2="307"/>
 
             <!-- pencil -->
             <g class="pencil">
-
                 <g transform="rotate(-48)">
-
-                    <!-- tip -->
-                    <polygon
-                        points="
-                        0,0
-                        18,-6
-                        18,6"
-                        fill="var(--tip)"/>
-
-                    <!-- wood -->
-                    <polygon
-                        points="
-                        18,-10
-                        40,-13
-                        40,13
-                        18,10"
-                        fill="var(--wood)"/>
-
-                    <!-- body -->
-                    <rect
-                        x="40"
-                        y="-14"
-                        width="88"
-                        height="28"
-                        rx="4"
-                        fill="var(--pencil)"/>
-
-                    <!-- metal -->
-                    <rect
-                        x="128"
-                        y="-12"
-                        width="16"
-                        height="24"
-                        rx="2"
-                        fill="var(--metal)"/>
-
-                    <!-- eraser -->
-                    <rect
-                        x="144"
-                        y="-15"
-                        width="28"
-                        height="30"
-                        rx="7"
-                        fill="var(--eraser)"/>
-
+                    <polygon points="0,0 18,-6 18,6" fill="var(--tip)"/>
+                    <polygon points="18,-10 40,-13 40,13 18,10" fill="var(--wood)"/>
+                    <rect x="40" y="-14" width="88" height="28" rx="4" fill="var(--pencil)"/>
+                    <rect x="128" y="-12" width="16" height="24" rx="2" fill="var(--metal)"/>
+                    <rect x="144" y="-15" width="28" height="30" rx="7" fill="var(--eraser)"/>
                 </g>
-
             </g>
 
         </svg>
-
     </div>
-
 </div>
 
 <div class="app" id="app">
     <iframe id="frame"></iframe>
 
     <div class="fallback" id="fallback">
-        This website cannot be embedded because it blocks iframes.
+        <div>
+            <div>This site cannot be shown inside this frame.</div>
+            <a id="openLink" target="_blank" rel="noopener">Open</a>
+        </div>
     </div>
 </div>
 
 <script>
-/* ========================= */
-/* CUSTOMIZE HERE            */
-/* ========================= */
-
 const SETTINGS = {
-
-    WEBSITE:
-        "https://classroom.poloniacruz.com/",
-
-    LOADING_TIME:
-        6000,
-
-    FADE_TIME:
-        350
+    WEBSITE: "https://classroom.poloniacruz.com/",
+    LOADING_TIME: 6000,
+    FADE_TIME: 350
 };
 
-/* ========================= */
+const loader = document.getElementById("loader");
+const app = document.getElementById("app");
+const frame = document.getElementById("frame");
+const fallback = document.getElementById("fallback");
+const openLink = document.getElementById("openLink");
 
-const loader=document.getElementById("loader");
-const app=document.getElementById("app");
-const frame=document.getElementById("frame");
-const fallback=document.getElementById("fallback");
+openLink.href = SETTINGS.WEBSITE;
 
-setTimeout(()=>{
+function showFallback(){
+    fallback.style.display = "grid";
+    frame.style.display = "none";
+}
+
+setTimeout(() => {
 
     loader.classList.add("fade");
 
-    setTimeout(()=>{
+    setTimeout(() => {
+        loader.style.display = "none";
+        app.style.display = "block";
 
-        loader.style.display="none";
-        app.style.display="block";
+        frame.src = SETTINGS.WEBSITE;
 
-        frame.src=SETTINGS.WEBSITE;
-
-        frame.onload=()=>{
-            fallback.style.display="none";
-        };
-
-        setTimeout(()=>{
-            try{
-                if(
-                    !frame.contentWindow ||
-                    frame.contentWindow.location.href==="about:blank"
-                ){
-                    fallback.style.display="grid";
-                }
-            }catch(e){
-                fallback.style.display="grid";
+        setTimeout(() => {
+            try {
+                const href = frame.contentWindow.location.href;
+                if (!href || href === "about:blank") showFallback();
+            } catch (e) {
+                showFallback();
             }
-        },1800);
+        }, 2000);
 
-    },SETTINGS.FADE_TIME);
+    }, SETTINGS.FADE_TIME);
 
-},SETTINGS.LOADING_TIME);
+}, SETTINGS.LOADING_TIME);
 </script>
 
 </body>
