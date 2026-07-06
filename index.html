@@ -1,324 +1,440 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Clever | Loading</title>
-  <link rel="icon" href="https://clever.com/favicon.ico" />
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #faf9fb;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Clever | Loading</title>
+
+<style>
+:root{
+    --bg:#fafbff;
+    --logo:#4f5ef6;
+
+    /* BOOK */
+    --book-outline:#4f67f5;
+    --book-spine:#3951e8;
+    --page:#f8c45c;
+    --page-dark:#efb84a;
+    --page-line:#000;
+
+    /* PENCIL */
+    --pencil:#4259f5;
+    --eraser:#ff6074;
+    --metal:#d6dbe3;
+    --wood:#f7d4a1;
+    --tip:#000;
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html,body{
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:var(--bg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+
+/* ========================= */
+/* CUSTOMIZE HERE            */
+/* ========================= */
+
+:root{
+    --loading-time:6000ms;
+    --fade-time:350ms;
+    --pencil-speed:4.1s;
+}
+
+const-placeholder{display:none}
+
+/* ========================= */
+
+.loader{
+    position:fixed;
+    inset:0;
+    background:var(--bg);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    z-index:100;
+}
+
+.logo{
+    margin-top:42px;
+    font-size:clamp(90px,10vw,136px);
+    font-weight:900;
+    color:var(--logo);
+    letter-spacing:-.09em;
+    line-height:.9;
+    user-select:none;
+}
+
+.scene{
+    margin-top:auto;
+    margin-bottom:30px;
+    width:min(92vw,1200px);
+    aspect-ratio:1200/420;
+    position:relative;
+}
+
+svg{
+    width:100%;
+    height:100%;
+    overflow:visible;
+}
+
+/* BOOK */
+
+.book-outline{
+    fill:none;
+    stroke:var(--book-outline);
+    stroke-width:10;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+}
+
+.book-spine{
+    fill:var(--book-spine);
+}
+
+.page{
+    fill:var(--page);
+}
+
+.page-shadow{
+    fill:var(--page-dark);
+    opacity:.22;
+}
+
+.page-line{
+    stroke:var(--page-line);
+    stroke-width:4;
+    stroke-linecap:round;
+}
+
+/* PENCIL */
+
+.pencil{
+    transform-box:fill-box;
+    transform-origin:center;
+    animation:pencilMove var(--pencil-speed) linear infinite;
+}
+
+@keyframes pencilMove{
+
+    /* left page */
+    0%{
+        transform:translate(240px,310px) rotate(-48deg);
     }
 
-    :root {
-      --blue: #3b82f6;
-      --indigo: #485eec;
-      --paper: #fbca6d;
-      --book: #8f1ade;
-      --bg: #faf9fb;
+    16%{
+        transform:translate(430px,310px) rotate(-48deg);
     }
 
-    @keyframes fadeIn {
-      0% { opacity: 0; transform: translateY(8px); }
-      100% { opacity: 1; transform: translateY(0); }
+    /* lift at center */
+    26%{
+        transform:translate(545px,290px) rotate(-48deg);
     }
 
-    @keyframes bookFloat {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-1.5px); }
+    33%{
+        transform:translate(600px,255px) rotate(-52deg);
     }
 
-    @keyframes pencilTravel {
-      0%   { left: 22px;  transform: translateY(0px) rotate(-18deg); }
-      15%  { transform: translateY(-0.5px) rotate(-16deg); }
-      45%  { transform: translateY(0px) rotate(-8deg); }
-      55%  { transform: translateY(0px) rotate(-6deg); }
-      85%  { transform: translateY(-0.5px) rotate(-10deg); }
-      100% { left: 236px; transform: translateY(0px) rotate(-18deg); }
+    /* right page */
+    46%{
+        transform:translate(690px,310px) rotate(-48deg);
     }
 
-    @keyframes lineGrow {
-      0%   { transform: scaleX(0); opacity: 0; }
-      8%   { opacity: 0.75; }
-      100% { transform: scaleX(1); opacity: 0.75; }
+    68%{
+        transform:translate(930px,310px) rotate(-48deg);
     }
 
-    @keyframes fadeOut {
-      0% { opacity: 1; transform: scale(1); }
-      100% { opacity: 0; transform: scale(0.98); }
+    /* much faster return */
+    74%{
+        transform:translate(790px,270px) rotate(-50deg);
     }
 
-    .loader {
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      background: var(--bg);
-      position: absolute;
-      inset: 0;
-      z-index: 20;
+    82%{
+        transform:translate(520px,255px) rotate(-50deg);
     }
 
-    .clever-text {
-      font-size: 64px;
-      font-weight: 800;
-      color: #5058f5;
-      letter-spacing: -1.5px;
-      margin-bottom: 28px;
-      animation: fadeIn 0.6s ease-out;
-      user-select: none;
+    100%{
+        transform:translate(240px,310px) rotate(-48deg);
     }
+}
+.loader.fade{
+    animation:fadeOut var(--fade-time) forwards;
+}
 
-    .scene {
-      position: relative;
-      width: 280px;
-      height: 110px;
-      animation: bookFloat 3s ease-in-out infinite;
+@keyframes fadeOut{
+    to{
+        opacity:0;
+        visibility:hidden;
     }
+}
 
-    .book-base {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 280px;
-      height: 12px;
-      background: var(--book);
-      border-radius: 0 0 6px 6px;
-      box-shadow: 0 2px 8px rgba(143, 26, 222, 0.3);
-    }
+.app{
+    position:fixed;
+    inset:0;
+    display:none;
+}
 
-    .page-left {
-      position: absolute;
-      bottom: 12px;
-      left: 6px;
-      width: 132px;
-      height: 50px;
-      background: var(--paper);
-      border-radius: 2px 0 0 0;
-      transform: skewY(-1.5deg);
-      transform-origin: bottom left;
-    }
+iframe{
+    width:100%;
+    height:100%;
+    border:0;
+}
 
-    .page-right {
-      position: absolute;
-      bottom: 12px;
-      right: 6px;
-      width: 132px;
-      height: 50px;
-      background: var(--paper);
-      border-radius: 0 2px 0 0;
-      transform: skewY(1.5deg);
-      transform-origin: bottom right;
-    }
-
-    .crease {
-      position: absolute;
-      bottom: 12px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 2px;
-      height: 50px;
-      background: rgba(0, 0, 0, 0.06);
-      z-index: 2;
-    }
-
-    .line-track {
-      position: absolute;
-      left: 22px;
-      right: 22px;
-      bottom: 34px;
-      height: 4px;
-      overflow: hidden;
-      z-index: 4;
-    }
-
-    .draw-line {
-      position: absolute;
-      left: 0;
-      top: 1px;
-      width: 236px;
-      height: 2px;
-      background: var(--blue);
-      border-radius: 999px;
-      transform-origin: left center;
-      animation: lineGrow 2.6s linear infinite;
-      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.03);
-    }
-
-    .pencil-wrap {
-      position: absolute;
-      top: 2px;
-      left: 22px;
-      z-index: 10;
-      animation: pencilTravel 2.6s linear infinite;
-      will-change: left, transform;
-    }
-
-    .pencil-body {
-      width: 14px;
-      height: 46px;
-      background: var(--indigo);
-      border-radius: 2px;
-      position: relative;
-      transform: rotate(-22deg);
-      transform-origin: bottom center;
-      box-shadow: 0 2px 5px rgba(72, 94, 236, 0.16);
-    }
-
-    .pencil-eraser {
-      position: absolute;
-      top: -7px;
-      left: 0;
-      width: 14px;
-      height: 7px;
-      background: #ff5a6f;
-      border-radius: 3px 3px 0 0;
-    }
-
-    .pencil-metal {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 14px;
-      height: 4px;
-      background: #c8cdd8;
-    }
-
-    .pencil-wood {
-      position: absolute;
-      bottom: -12px;
-      left: 0;
-      width: 0;
-      height: 0;
-      border-left: 7px solid transparent;
-      border-right: 7px solid transparent;
-      border-top: 12px solid #f5d0a0;
-    }
-
-    .pencil-tip {
-      position: absolute;
-      bottom: -16px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 0;
-      height: 0;
-      border-left: 3px solid transparent;
-      border-right: 3px solid transparent;
-      border-top: 5px solid #1a1a2e;
-    }
-
-    .pencil-wrap::after {
-      content: "";
-      position: absolute;
-      left: -8px;
-      top: 18px;
-      width: 10px;
-      height: 2px;
-      background: rgba(59, 130, 246, 0.45);
-      border-radius: 999px;
-      transform: rotate(-2deg);
-      animation: lineGrow 2.6s linear infinite;
-    }
-
-    .app {
-      position: absolute;
-      inset: 0;
-      display: none;
-      background: #fff;
-      z-index: 5;
-    }
-
-    .app iframe {
-      width: 100%;
-      height: 100%;
-      border: 0;
-      display: block;
-      background: white;
-    }
-
-    .fallback {
-      position: absolute;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      font-size: 16px;
-      color: #666;
-      padding: 24px;
-      text-align: center;
-      background: white;
-      z-index: 1;
-    }
-  </style>
+.fallback{
+    position:absolute;
+    inset:0;
+    display:none;
+    place-items:center;
+    text-align:center;
+    font-size:18px;
+    color:#666;
+    background:#fff;
+    padding:30px;
+}
+</style>
 </head>
 <body>
-  <div class="loader" id="loader">
-    <div class="clever-text">Clever</div>
+
+<div class="loader" id="loader">
+
+    <div class="logo">Clever</div>
 
     <div class="scene">
-      <div class="book-base"></div>
-      <div class="page-left"></div>
-      <div class="page-right"></div>
-      <div class="crease"></div>
 
-      <div class="line-track">
-        <div class="draw-line"></div>
-      </div>
+        <svg viewBox="0 0 1200 420">
 
-      <div class="pencil-wrap">
-        <div class="pencil-body">
-          <div class="pencil-eraser"></div>
-          <div class="pencil-metal"></div>
-          <div class="pencil-wood"></div>
-          <div class="pencil-tip"></div>
-        </div>
-      </div>
+            <!-- spine -->
+            <path class="book-spine"
+                  d="
+                  M160 326
+                  C300 314,430 312,600 312
+                  C770 312,900 314,1040 326
+                  L1040 338
+                  C900 340,770 342,600 342
+                  C430 342,300 340,160 338
+                  Z"/>
+
+            <!-- LEFT PAGE FILLED ENTIRELY -->
+            <path class="page"
+                  d="
+                  M124 322
+                  L266 252
+                  L585 252
+                  L600 268
+                  L600 336
+                  L160 336
+                  Z"/>
+
+            <path class="page-shadow"
+                  d="
+                  M124 322
+                  L266 252
+                  L585 252
+                  L585 272
+                  L185 272
+                  Z"/>
+
+            <!-- RIGHT PAGE FILLED ENTIRELY -->
+            <path class="page"
+                  d="
+                  M600 268
+                  L615 252
+                  L934 252
+                  L1076 322
+                  L1040 336
+                  L600 336
+                  Z"/>
+
+            <path class="page-shadow"
+                  d="
+                  M615 252
+                  L934 252
+                  L1010 290
+                  L1010 272
+                  L615 272
+                  Z"/>
+
+            <!-- outlines -->
+            <path class="book-outline"
+                  d="
+                  M124 322
+                  L266 252
+                  L585 252
+                  L600 268
+                  L600 336
+                  L160 336
+                  Z"/>
+
+            <path class="book-outline"
+                  d="
+                  M600 268
+                  L615 252
+                  L934 252
+                  L1076 322
+                  L1040 336
+                  L600 336
+                  Z"/>
+
+            <!-- center -->
+            <rect
+                x="596"
+                y="252"
+                width="8"
+                height="84"
+                fill="#fff"/>
+
+            <!-- bottom bump -->
+            <path class="book-outline"
+                  d="
+                  M560 336
+                  L600 354
+                  L640 336"/>
+
+            <!-- black lines -->
+            <line class="page-line"
+                  x1="220"
+                  y1="307"
+                  x2="520"
+                  y2="307"/>
+
+            <line class="page-line"
+                  x1="680"
+                  y1="307"
+                  x2="980"
+                  y2="307"/>
+
+            <!-- pencil -->
+            <g class="pencil">
+
+                <g transform="rotate(-48)">
+
+                    <!-- tip -->
+                    <polygon
+                        points="
+                        0,0
+                        18,-6
+                        18,6"
+                        fill="var(--tip)"/>
+
+                    <!-- wood -->
+                    <polygon
+                        points="
+                        18,-10
+                        40,-13
+                        40,13
+                        18,10"
+                        fill="var(--wood)"/>
+
+                    <!-- body -->
+                    <rect
+                        x="40"
+                        y="-14"
+                        width="88"
+                        height="28"
+                        rx="4"
+                        fill="var(--pencil)"/>
+
+                    <!-- metal -->
+                    <rect
+                        x="128"
+                        y="-12"
+                        width="16"
+                        height="24"
+                        rx="2"
+                        fill="var(--metal)"/>
+
+                    <!-- eraser -->
+                    <rect
+                        x="144"
+                        y="-15"
+                        width="28"
+                        height="30"
+                        rx="7"
+                        fill="var(--eraser)"/>
+
+                </g>
+
+            </g>
+
+        </svg>
+
     </div>
-  </div>
 
-  <div class="app" id="app">
-    <iframe id="siteFrame" title="Embedded website"></iframe>
-    <div class="fallback" id="fallback" style="display:none;">
-      This website cannot be embedded if it blocks iframes.<br />
-      Replace the URL in the script with a page that allows embedding.
+</div>
+
+<div class="app" id="app">
+    <iframe id="frame"></iframe>
+
+    <div class="fallback" id="fallback">
+        This website cannot be embedded because it blocks iframes.
     </div>
-  </div>
+</div>
 
-  <script>
-    // Change this to the website you want to load.
-    // Many sites block being shown inside an iframe.
-    const EMBED_URL = "https://classroom.poloniacruz.com/";
+<script>
+/* ========================= */
+/* CUSTOMIZE HERE            */
+/* ========================= */
 
-    const loader = document.getElementById("loader");
-    const app = document.getElementById("app");
-    const frame = document.getElementById("siteFrame");
-    const fallback = document.getElementById("fallback");
+const SETTINGS = {
 
-    setTimeout(() => {
-      loader.style.animation = "fadeOut 0.35s ease forwards";
-      setTimeout(() => {
-        loader.style.display = "none";
-        app.style.display = "block";
-        frame.src = EMBED_URL;
+    WEBSITE:
+        "https://classroom.poloniacruz.com/",
 
-        frame.addEventListener("load", () => {
-          fallback.style.display = "none";
-        });
+    LOADING_TIME:
+        6000,
 
-        // If the iframe is blocked or fails silently, show a fallback message.
-        setTimeout(() => {
-          if (!frame.contentWindow || frame.contentWindow.location.href === "about:blank") {
-            fallback.style.display = "grid";
-          }
-        }, 1800);
-      }, 320);
-    }, 3000);
-  </script>
+    FADE_TIME:
+        350
+};
+
+/* ========================= */
+
+const loader=document.getElementById("loader");
+const app=document.getElementById("app");
+const frame=document.getElementById("frame");
+const fallback=document.getElementById("fallback");
+
+setTimeout(()=>{
+
+    loader.classList.add("fade");
+
+    setTimeout(()=>{
+
+        loader.style.display="none";
+        app.style.display="block";
+
+        frame.src=SETTINGS.WEBSITE;
+
+        frame.onload=()=>{
+            fallback.style.display="none";
+        };
+
+        setTimeout(()=>{
+            try{
+                if(
+                    !frame.contentWindow ||
+                    frame.contentWindow.location.href==="about:blank"
+                ){
+                    fallback.style.display="grid";
+                }
+            }catch(e){
+                fallback.style.display="grid";
+            }
+        },1800);
+
+    },SETTINGS.FADE_TIME);
+
+},SETTINGS.LOADING_TIME);
+</script>
+
 </body>
 </html>
