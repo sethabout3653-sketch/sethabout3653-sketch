@@ -9,8 +9,11 @@ ENV BIND=":10000"
 ENV SERVE_ROBOTS_TXT="true"
 ENV TARGET="file:///index.html"
 
-# MAP RENDER'S PROXY HEADERS CORRECTLY
-ENV CUSTOM_REAL_IP_HEADER="X-Forwarded-For"
+# STEP 4: BYPASS THE RENDER PROXY LOOP CRASH COMPLETELY
+# Force Anubis to read client IPs directly from network sockets
+ENV USE_REMOTE_ADDRESS="true"
+# Provide a fallback header to satisfy the validator check requirement
+ENV CUSTOM_REAL_IP_HEADER="Remote-Addr"
 
-# Step 4: Expose Render's standard web port
+# Step 5: Expose Render's standard web port
 EXPOSE 10000
