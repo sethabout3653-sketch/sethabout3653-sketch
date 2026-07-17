@@ -9,5 +9,8 @@ ENV BIND=":10000"
 ENV SERVE_ROBOTS_TXT="true"
 ENV TARGET="file:///index.html"
 
+# FIX THE LOOP: Tell Anubis to trust Render's proxy headers
+ENV TRUSTED_PROXIES="0.0.0.0/0"
+
 # Step 4: Expose Render's standard web port
 EXPOSE 10000
