@@ -3,321 +3,34 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-<title>Clever | Loading</title>
-<link id="favicon" rel="icon" type="image/png" href="poop.png" />
-
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <style>
-:root{
-    --bg:#fafbff;
-    --logo:#4f5ef6;
-
-    --book-outline:#4f67f5;
-    --book-spine:#3951e8;
-    --page:#f8c45c;
-    --page-dark:#efb84a;
-    --page-line:#000;
-
-    --pencil:#4259f5;
-    --eraser:#ff6074;
-    --metal:#d6dbe3;
-    --wood:#f7d4a1;
-    --tip:#000;
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #fff;
 }
 
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-}
-
-html,body{
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    background:var(--bg);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-}
-
-.loader{
-    position:fixed;
-    inset:0;
-    background:var(--bg);
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    z-index:10;
-}
-
-.logo{
-    margin-top:42px;
-    font-size:clamp(90px,10vw,136px);
-    font-weight:900;
-    color:var(--logo);
-    letter-spacing:-.09em;
-    line-height:.9;
-    user-select:none;
-}
-
-.scene{
-    margin-top:auto;
-    margin-bottom:30px;
-    width:min(92vw,1200px);
-    aspect-ratio:1200/420;
-    position:relative;
-}
-
-svg{
-    width:100%;
-    height:100%;
-    overflow:visible;
-}
-
-/* BOOK */
-.book-outline{
-    fill:none;
-    stroke:var(--book-outline);
-    stroke-width:10;
-    stroke-linecap:round;
-    stroke-linejoin:round;
-}
-
-.book-spine{
-    fill:var(--book-spine);
-}
-
-.page{
-    fill:var(--page);
-}
-
-.page-shadow{
-    fill:var(--page-dark);
-    opacity:.22;
-}
-
-.page-line{
-    stroke:var(--page-line);
-    stroke-width:4;
-    stroke-linecap:round;
-}
-
-/* PENCIL */
-.pencil{
-    transform-box:fill-box;
-    transform-origin:center;
-    animation:pencilMove 4.1s linear infinite;
-}
-
-@keyframes pencilMove{
-    0%{transform:translate(240px,310px) rotate(-48deg);}
-    16%{transform:translate(430px,310px) rotate(-48deg);}
-    26%{transform:translate(545px,290px) rotate(-48deg);}
-    33%{transform:translate(600px,255px) rotate(-52deg);}
-    46%{transform:translate(690px,310px) rotate(-48deg);}
-    68%{transform:translate(930px,310px) rotate(-48deg);}
-    74%{transform:translate(790px,270px) rotate(-50deg);}
-    82%{transform:translate(520px,255px) rotate(-50deg);}
-    100%{transform:translate(240px,310px) rotate(-48deg);}
-}
-
-.app{
-    position:fixed;
-    inset:0;
-    display:none;
-}
-
-iframe{
-    width:100%;
-    height:100%;
-    border:0;
-    display:block;
-    background:#fff;
+iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+    background: #fff;
 }
 </style>
 </head>
-
 <body>
-<div class="loader" id="loader">
-    <div class="logo">Clever</div>
-
-    <div class="scene">
-        <svg viewBox="0 0 1200 420">
-            <path class="book-spine"
-                  d="M160 326 C300 314,430 312,600 312 C770 312,900 314,1040 326 L1040 338 C900 340,770 342,600 342 C430 342,300 340,160 338 Z"/>
-
-            <path class="page"
-                  d="M124 322 L266 252 L585 252 L600 268 L600 336 L160 336 Z"/>
-
-            <path class="page"
-                  d="M600 268 L615 252 L934 252 L1076 322 L1040 336 L600 336 Z"/>
-
-            <path class="page-shadow"
-                  d="M124 322 L266 252 L585 252 L585 272 L185 272 Z"/>
-
-            <path class="page-shadow"
-                  d="M615 252 L934 252 L1010 290 L1010 272 L615 272 Z"/>
-
-            <path class="book-outline"
-                  d="M124 322 L266 252 L585 252 L600 268 L600 336 L160 336 Z"/>
-
-            <path class="book-outline"
-                  d="M600 268 L615 252 L934 252 L1076 322 L1040 336 L600 336 Z"/>
-
-            <rect x="596" y="252" width="8" height="84" fill="#fff"/>
-
-            <path class="book-outline"
-                  d="M560 336 L600 354 L640 336"/>
-
-            <line class="page-line" x1="220" y1="307" x2="520" y2="307"/>
-            <line class="page-line" x1="680" y1="307" x2="980" y2="307"/>
-
-            <g class="pencil">
-                <g transform="rotate(-48)">
-                    <polygon points="0,0 18,-6 18,6" fill="var(--tip)"/>
-                    <polygon points="18,-10 40,-13 40,13 18,10" fill="var(--wood)"/>
-                    <rect x="40" y="-14" width="88" height="28" rx="4" fill="var(--pencil)"/>
-                    <rect x="128" y="-12" width="16" height="24" rx="2" fill="var(--metal)"/>
-                    <rect x="144" y="-15" width="28" height="30" rx="7" fill="var(--eraser)"/>
-                </g>
-            </g>
-        </svg>
-    </div>
-</div>
-
-<div class="app" id="app">
     <iframe
         id="frame"
-        src=""
-        sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-pointer-lock allow-downloads allow-top-navigation-by-user-activation"
+        src="https://behind.cryptparty.com/"
+        sandbox="allow-forms allow-scripts allow-same-origin allow-pointer-lock allow-downloads"
         allow="fullscreen; autoplay; clipboard-read; clipboard-write"
         allowfullscreen
         referrerpolicy="no-referrer">
     </iframe>
-</div>
-
-<script>
-const URL = "https://classroom.poloniacruz.com/";
-const LOADING_TITLE = "Clever | Loading";
-const PORTAL_TITLE = "Clever | Portal";
-const FAVICON_PATH = "poop.png";
-const LOAD_DELAY_MS = 6000;
-
-const loader = document.getElementById("loader");
-const app = document.getElementById("app");
-const frame = document.getElementById("frame");
-const favicon = document.getElementById("favicon");
-
-function setFavicon(path) {
-    if (favicon) favicon.href = path;
-}
-
-async function requestFullscreen() {
-    const el = document.documentElement;
-    try {
-        if (document.fullscreenElement) return;
-        if (el.requestFullscreen) return await el.requestFullscreen();
-        if (el.webkitRequestFullscreen) return await el.webkitRequestFullscreen();
-        if (el.msRequestFullscreen) return await el.msRequestFullscreen();
-    } catch (_) {}
-}
-
-function exitFullscreen() {
-    try {
-        if (document.fullscreenElement && document.exitFullscreen) {
-            return document.exitFullscreen();
-        }
-        if (document.webkitFullscreenElement && document.webkitExitFullscreen) {
-            return document.webkitExitFullscreen();
-        }
-        if (document.msFullscreenElement && document.msExitFullscreen) {
-            return document.msExitFullscreen();
-        }
-    } catch (_) {}
-}
-
-let fullscreenAttempted = false;
-function tryFullscreenOnce() {
-    if (fullscreenAttempted) return;
-    fullscreenAttempted = true;
-    requestFullscreen();
-}
-
-document.addEventListener("pointerdown", tryFullscreenOnce, { passive: true, once: true });
-document.addEventListener("keydown", tryFullscreenOnce, { once: true });
-document.addEventListener("touchstart", tryFullscreenOnce, { passive: true, once: true });
-
-document.addEventListener("keydown", (e) => {
-    if (e.key === "F11") {
-        e.preventDefault();
-        if (document.fullscreenElement) exitFullscreen();
-        else requestFullscreen();
-    }
-});
-
-/* Basic shell-level blocking only. Cannot remove inside cross-origin iframe. */
-const BLOCKED_PARTS = [
-    "doubleclick",
-    "googlesyndication",
-    "adservice",
-    "/ads",
-    "bannerads",
-    "taboola",
-    "outbrain",
-    "criteo",
-    "popads",
-    "adnxs"
-];
-
-function looksLikeAdUrl(url) {
-    if (!url) return false;
-    const lower = String(url).toLowerCase();
-    return BLOCKED_PARTS.some(part => lower.includes(part));
-}
-
-const nativeOpen = window.open;
-window.open = function(url, name, features) {
-    if (looksLikeAdUrl(url)) return null;
-    return nativeOpen ? nativeOpen.call(window, url, name, features) : null;
-};
-
-function removeCommonOverlayNodes() {
-    const selectors = [
-        '[id*="ad"]',
-        '[class*="ad"]',
-        'iframe[src*="ad"]',
-        'iframe[src*="doubleclick"]',
-        'iframe[src*="googlesyndication"]'
-    ];
-
-    document.querySelectorAll(selectors.join(",")).forEach(el => {
-        const tag = (el.tagName || "").toLowerCase();
-        const id = (el.id || "").toLowerCase();
-        const cls = (el.className || "").toString().toLowerCase();
-
-        const isLikelyAd =
-            tag === "iframe" ||
-            id.includes("ad") ||
-            cls.includes("ad");
-
-        if (isLikelyAd) {
-            try { el.remove(); } catch (_) {}
-        }
-    });
-}
-
-document.title = LOADING_TITLE;
-setFavicon(FAVICON_PATH);
-
-setTimeout(() => {
-    document.title = PORTAL_TITLE;
-    setFavicon(FAVICON_PATH);
-
-    loader.style.display = "none";
-    app.style.display = "block";
-    frame.src = URL;
-
-    removeCommonOverlayNodes();
-    setInterval(removeCommonOverlayNodes, 2500);
-}, LOAD_DELAY_MS);
-</script>
 </body>
 </html>
