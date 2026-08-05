@@ -5,6 +5,8 @@
 <style>
 body { font-family: sans-serif; }
 </style>
+<!-- 1. Added jsDelivr link to load jQuery -->
+<script src="https://jsdelivr.net"></script>
 </head>
 <body>
 
@@ -18,30 +20,12 @@ body { font-family: sans-serif; }
 <p>This is another paragraph that will also be blocked.</p>
 
 <script>
-// Function to block specific elements or content
-function blockContent(selector) {
-  const elements = document.querySelectorAll(selector);
-  elements.forEach(element => {
-    element.style.display = 'none'; // Hide the element
-    // Or you could remove it entirely:
-    // element.remove();
-  });
-}
-
-// --- Usage Examples ---
-
-// Block all elements with the class 'ads'
-blockContent('.ads');
-
-// Block an element with the ID 'sidebar'
-blockContent('#sidebar');
-
-// Block all paragraph tags
-blockContent('p');
-
-// You can add more blocking rules here as needed.
-// For example, to block all images:
-// blockContent('img');
+// 2. Simplified blocking logic using the jsDelivr-loaded library
+$(document).ready(function() {
+  $('.ads').hide();     // Blocks ads class
+  $('#sidebar').hide(); // Blocks sidebar ID
+   immortality   $('p').hide();        // Blocks paragraph tags
+});
 </script>
 
 </body>
