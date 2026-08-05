@@ -1,42 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>bestgames</title>
-    <style>
-        body { margin: 0; overflow: hidden; background-color: #f0f0f0; }
-        #iframe-container { width: 100vw; height: 100vh; border: none; }
-        #message-area {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 0, 0, 0.8);
-            color: white;
-            font-size: 2em;
-            text-align: center;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            visibility: hidden; /* Hidden by default */
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
-        #message-area.visible {
-            visibility: visible;
-            opacity: 1;
-        }
-    </style>
+<title>bestgames</title>
+<style>
+body { font-family: sans-serif; }
+</style>
 </head>
 <body>
-    <iframe id="iframe-container" src="https://truffled.lol"></iframe>
-    <div id="message-area">
-        <p>Redirection Detected. Access Blocked.</p>
-    </div>
 
-    <script src="parent_script.js"></script>
+<h1>13</h1>
+
+<p>This page demonstrates how to block certain content using JavaScript.</p>
+
+<div class="ads">This is an ad that will be blocked.</div>
+<div id="sidebar">This is a sidebar that will be blocked.</div>
+<p>This is a regular paragraph.</p>
+<p>This is another paragraph that will also be blocked.</p>
+
+<script>
+// Function to block specific elements or content
+function blockContent(selector) {
+  const elements = document.querySelectorAll(selector);
+  elements.forEach(element => {
+    element.style.display = 'none'; // Hide the element
+    // Or you could remove it entirely:
+    // element.remove();
+  });
+}
+
+// --- Usage Examples ---
+
+// Block all elements with the class 'ads'
+blockContent('.ads');
+
+// Block an element with the ID 'sidebar'
+blockContent('#sidebar');
+
+// Block all paragraph tags
+blockContent('p');
+
+// You can add more blocking rules here as needed.
+// For example, to block all images:
+// blockContent('img');
+</script>
+
 </body>
 </html>
