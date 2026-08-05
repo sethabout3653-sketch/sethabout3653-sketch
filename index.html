@@ -1,36 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1.0" />
-<meta http-equiv="X-UA-Compatible" content="IE=edge" />
-<style>
-html, body {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    background: #fff;
-}
-
-iframe {
-    width: 100%;
-    height: 100%;
-    border: 0;
-    display: block;
-    background: #fff;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protected Frame Host</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #f0f0f0; }
+        #iframe-container { width: 100vw; height: 100vh; border: none; }
+        #message-area {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 0, 0, 0.8);
+            color: white;
+            font-size: 2em;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            visibility: hidden; /* Hidden by default */
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        #message-area.visible {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
 </head>
 <body>
-    <iframe
-        id="frame"
-        src="https://behind.cryptparty.com/"
-        sandbox="allow-forms allow-scripts allow-same-origin allow-pointer-lock allow-downloads"
-        allow="fullscreen; autoplay; clipboard-read; clipboard-write"
-        allowfullscreen
-        referrerpolicy="no-referrer">
-    </iframe>
+    <iframe id="iframe-container" src="about:blank"></iframe>
+    <div id="message-area">
+        <p>Redirection Detected. Access Blocked.</p>
+    </div>
+
+    <script src="parent_script.js"></script>
 </body>
 </html>
