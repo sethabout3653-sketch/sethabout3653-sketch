@@ -1,116 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>UnblockedSeth</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Website</title>
     <style>
-        html, body { 
-            width: 100%; 
-            height: 100%; 
-            margin: 0; 
-            padding: 0; 
-            overflow: hidden; 
-            background: #000; 
-            font-family: sans-serif;
+        body { margin: 0; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f0f0; }
+        .fullscreen-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        iframe { 
-            display: block; 
-            width: 100vw; 
-            height: 100vh; 
-            border: 0; 
-            margin: 0; 
-            padding: 0; 
-        }
-        #loading-screen {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #111; color: #fff;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 24px; z-index: 9999;
-            transition: opacity 0.5s ease;
+        iframe {
+            border: none; /* Remove default iframe border */
+            width: 100%;
+            height: 100%;
+            display: block; /* Removes extra space below the iframe */
         }
     </style>
 </head>
 <body>
-
-    <div id="loading-screen">Bypassing Security Restraints...</div>
-
-    <!-- 
-      OMITTING "allow-top-navigation" completely locks out extension redirects.
-      The source will be dynamically populated via the CORS-bypassed Blob URL injector below.
-    -->
-    <iframe 
-        id="secure-frame"
-        src="about:blank" 
-        title="UnblockedSeth" 
-        allow="fullscreen; clipboard-read; clipboard-write; gamepad" 
-        allowfullscreen 
-        sandbox="allow-scripts allow-forms allow-popups allow-modals allow-downloads allow-pointer-lock allow-presentation allow-same-origin" 
-        referrerpolicy="no-referrer"
-    ></iframe>
-
-    <script>
-        const targetUrl = "https://nirbytesovercloaked-zafo.numbercraftacademy.com";
-        
-        // Public open-source CORS proxy to bypass "failed to fetch html content" restrictions
-        const corsProxy = "https://allorigins.win";
-        
-        const iframe = document.getElementById('secure-frame');
-        const loader = document.getElementById('loading-screen');
-
-        // 1. Fetch the raw website content through the CORS proxy bypass route
-        fetch(corsProxy + encodeURIComponent(targetUrl))
-            .then(response => {
-                if (!response.ok) throw new Error('Proxy communication block');
-                return response.text();
-            })
-            .then(htmlContent => {
-                // 2. Inject an HTML <base> tag so all background styles/scripts map back to the original website
-                const baseTag = `<base href="${targetUrl}">`;
-                
-                // 3. Scrub out common JavaScript frame-breaking logic that causes breakouts or redirects
-                let cleanedHtml = htmlContent.replace('<head>', `<head>${baseTag}`);
-                cleanedHtml = cleanedHtml.replace(/top\.location/g, 'self.location');
-                cleanedHtml = cleanedHtml.replace(/window\.top/g, 'window.self');
-                cleanedHtml = cleanedHtml.replace(/parent\.location/g, 'self.location');
-
-                // 4. Convert the entire code base into a local browser Blob object
-                const blob = new Blob([cleanedHtml], { type: 'text/html' });
-                const blobUrl = URL.createObjectURL(blob);
-
-                // 5. Load the virtual URL into the sandbox iframe
-                iframe.src = blobUrl;
-                
-                // Hide loading screen once execution clears
-                iframe.onload = () => {
-                    loader.style.opacity = '0';
-                    setTimeout(() => loader.remove(), 500);
-                };
-            })
-            .catch(err => {
-                console.error("Embedding failure:", err);
-                // Hard fallback directly to the source if the public proxy fails
-                iframe.src = targetUrl;
-                loader.remove();
-            });
-
-        // ================= ANTI-REDIRECT LOCK MECHANICS =================
-        var preventNavigation = 0;
-        window.onbeforeunload = function() {
-            if (preventNavigation > 0) {
-                preventNavigation--;
-                return "Redirect attempt caught and neutralized.";
-            }
-        };
-
-        setInterval(function() {
-            preventNavigation++;
-            if (window.location.hash !== '#protected') {
-                window.location.hash = '#protected';
-            }
-        }, 100);
-    </script>
-
+    <div class="fullscreen-container">
+        <iframe
+            src="YOUR_TARGET_WEBSITE_URL_HERE"
+            sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-downloads"
+            allowfullscreen
+            title="Embedded Content"
+        ></iframe>
+    </div>
 </body>
 </html>
