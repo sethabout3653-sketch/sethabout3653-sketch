@@ -2,15 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-    >
-
-    <meta
-        http-equiv="Content-Security-Policy"
-        content="default-src 'self'; frame-src https:; object-src 'none'; base-uri 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self';"
     >
 
     <meta
@@ -23,9 +17,13 @@
         content="no-referrer"
     >
 
-    <title>ayoGAMES</title>
+    <title>GAMESAYOO</title>
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         html,
         body {
             width: 100%;
@@ -45,13 +43,13 @@
             position: fixed;
             inset: 0;
 
+            display: block;
+
             width: 100vw;
             height: 100vh;
 
             width: 100dvw;
             height: 100dvh;
-
-            display: block;
 
             margin: 0;
             padding: 0;
@@ -66,78 +64,111 @@
 
 <body>
 
-    <iframe
-        id="embed"
-        src="https://nirbytesovercloaked-zafo.numbercraftacademy.com"
-        title="Embedded Website"
+<iframe
+    id="embed"
+    title="Embedded Website"
 
-        sandbox="
-            allow-downloads
-            allow-forms
-            allow-modals
-            allow-orientation-lock
-            allow-pointer-lock
-            allow-presentation
-            allow-scripts
-            allow-storage-access-by-user-activation
-        "
+    src="https://nirbytesovercloaked-zafo.numbercraftacademy.com"
 
-        allow="
-            autoplay;
-            fullscreen;
-            picture-in-picture;
-            encrypted-media;
-            clipboard-read;
-            clipboard-write
-        "
+    /*
+     * IMPORTANT:
+     *
+     * There is intentionally NO:
+     *
+     * allow-same-origin
+     * allow-top-navigation
+     * allow-top-navigation-by-user-activation
+     * allow-popups
+     * allow-popups-to-escape-sandbox
+     *
+     * The iframe therefore receives an opaque origin and cannot
+     * use the sandbox permissions to navigate the top-level page.
+     */
+    sandbox="
+        allow-forms
+        allow-scripts
+        allow-modals
+        allow-presentation
+        allow-orientation-lock
+    "
 
-        allowfullscreen
-        referrerpolicy="no-referrer"
-    ></iframe>
+    referrerpolicy="no-referrer"
+></iframe>
 
-    <script>
-        "use strict";
+<script>
+"use strict";
 
-        const iframe = document.getElementById("embed");
+const iframe = document.getElementById("embed");
 
-        const TRUSTED_URL = "https://example.com/";
+/*
+ * ONLY put a website here that you trust.
+ */
+const TRUSTED_URL = "https://example.com/";
 
-        iframe.src = TRUSTED_URL;
+/*
+ * Force the initial URL.
+ */
+iframe.src = TRUSTED_URL;
 
-        /*
-         * Keep the iframe element itself pointed at the configured URL.
-         */
-        const observer = new MutationObserver(() => {
-            if (iframe.getAttribute("src") !== TRUSTED_URL) {
-                iframe.setAttribute("src", TRUSTED_URL);
-            }
-        });
+/*
+ * Keep the iframe element itself from being changed by this page.
+ */
+const iframeObserver = new MutationObserver(() => {
+    const current = iframe.getAttribute("src");
 
-        observer.observe(iframe, {
-            attributes: true,
-            attributeFilter: ["src"]
-        });
+    if (current !== TRUSTED_URL) {
+        iframe.setAttribute("src", TRUSTED_URL);
+    }
+});
 
-        /*
-         * Keep the iframe exactly fullscreen.
-         */
-        function resizeIframe() {
-            iframe.style.width = `${window.innerWidth}px`;
-            iframe.style.height = `${window.innerHeight}px`;
-        }
+iframeObserver.observe(iframe, {
+    attributes: true,
+    attributeFilter: ["src"]
+});
 
-        window.addEventListener("resize", resizeIframe);
-        window.addEventListener("orientationchange", resizeIframe);
+/*
+ * Keep the iframe fullscreen.
+ */
+function resizeIframe() {
+    iframe.style.width = `${window.innerWidth}px`;
+    iframe.style.height = `${window.innerHeight}px`;
+}
 
-        resizeIframe();
+window.addEventListener("resize", resizeIframe, {
+    passive: true
+});
 
-        /*
-         * Restore the configured URL if the iframe itself reports an error.
-         */
-        iframe.addEventListener("error", () => {
-            iframe.src = TRUSTED_URL;
-        });
-    </script>
+window.addEventListener("orientationchange", resizeIframe, {
+    passive: true
+});
+
+resizeIframe();
+
+/*
+ * If the iframe element reports an error, restore the
+ * configured URL.
+ */
+iframe.addEventListener("error", () => {
+    iframe.src = TRUSTED_URL;
+});
+
+/*
+ * Make sure this parent page does not intentionally navigate
+ * anywhere. There is no location assignment anywhere in this
+ * application.
+ */
+window.addEventListener("click", (event) => {
+    const target = event.target;
+
+    if (
+        target instanceof HTMLAnchorElement &&
+        target.target === "_top"
+    ) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+});
+</script>
 
 </body>
 </html>
