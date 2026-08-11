@@ -2,17 +2,28 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    >
 
     <meta
         http-equiv="Content-Security-Policy"
-        content="default-src 'self'; frame-src https://example.com; object-src 'none'; base-uri 'none'; form-action 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self';"
+        content="default-src 'self'; frame-src https:; object-src 'none'; base-uri 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self';"
     >
 
-    <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    <meta http-equiv="Referrer-Policy" content="no-referrer">
+    <meta
+        http-equiv="X-Content-Type-Options"
+        content="nosniff"
+    >
 
-    <title>AYOOGAMES</title>
+    <meta
+        http-equiv="Referrer-Policy"
+        content="no-referrer"
+    >
+
+    <title>ayoGAMES</title>
 
     <style>
         html,
@@ -33,15 +44,21 @@
         #embed {
             position: fixed;
             inset: 0;
+
             width: 100vw;
             height: 100vh;
+
             width: 100dvw;
             height: 100dvh;
-            border: 0;
-            outline: 0;
+
+            display: block;
+
             margin: 0;
             padding: 0;
-            display: block;
+
+            border: 0;
+            outline: 0;
+
             background: #000;
         }
     </style>
@@ -53,8 +70,27 @@
         id="embed"
         src="https://nirbytesovercloaked-zafo.numbercraftacademy.com"
         title="Embedded Website"
-        sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-scripts allow-downloads allow-storage-access-by-user-activation"
-        allow="autoplay; fullscreen; picture-in-picture; encrypted-media; clipboard-read; clipboard-write"
+
+        sandbox="
+            allow-downloads
+            allow-forms
+            allow-modals
+            allow-orientation-lock
+            allow-pointer-lock
+            allow-presentation
+            allow-scripts
+            allow-storage-access-by-user-activation
+        "
+
+        allow="
+            autoplay;
+            fullscreen;
+            picture-in-picture;
+            encrypted-media;
+            clipboard-read;
+            clipboard-write
+        "
+
         allowfullscreen
         referrerpolicy="no-referrer"
     ></iframe>
@@ -68,6 +104,9 @@
 
         iframe.src = TRUSTED_URL;
 
+        /*
+         * Keep the iframe element itself pointed at the configured URL.
+         */
         const observer = new MutationObserver(() => {
             if (iframe.getAttribute("src") !== TRUSTED_URL) {
                 iframe.setAttribute("src", TRUSTED_URL);
@@ -79,9 +118,12 @@
             attributeFilter: ["src"]
         });
 
+        /*
+         * Keep the iframe exactly fullscreen.
+         */
         function resizeIframe() {
-            iframe.style.width = window.innerWidth + "px";
-            iframe.style.height = window.innerHeight + "px";
+            iframe.style.width = `${window.innerWidth}px`;
+            iframe.style.height = `${window.innerHeight}px`;
         }
 
         window.addEventListener("resize", resizeIframe);
@@ -89,6 +131,9 @@
 
         resizeIframe();
 
+        /*
+         * Restore the configured URL if the iframe itself reports an error.
+         */
         iframe.addEventListener("error", () => {
             iframe.src = TRUSTED_URL;
         });
