@@ -1,14 +1,15 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
     <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+        http-equiv="Content-Security-Policy"
+        content="default-src 'self'; frame-src https:; child-src https:; object-src 'none'; base-uri 'none'; form-action 'none';"
     >
 
-    <title>UnblockedSethYayy</title>
+    <title>UnblockedAYOOOOO</title>
 
     <style>
         html,
@@ -22,18 +23,24 @@
         }
 
         iframe {
-            display: block;
-            width: 100%;
-            height: 100%;
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            width: 100dvw;
+            height: 100dvh;
             border: 0;
             margin: 0;
             padding: 0;
+            display: block;
+            background: #000;
         }
     </style>
 </head>
 
 <body>
     <iframe
+        id="embeddedSite"
         src="https://nirbytesovercloaked-zafo.numbercraftacademy.com"
         title="Embedded Website"
         allow="
@@ -64,18 +71,58 @@
             allow-modals
             allow-orientation-lock
             allow-pointer-lock
-            allow-popups
-            allow-popups-to-escape-sandbox
             allow-presentation
             allow-same-origin
             allow-scripts
             allow-storage-access-by-user-activation
-            allow-top-navigation
-            allow-top-navigation-by-user-activation
-            allow-top-navigation-to-custom-protocols
         "
-        referrerpolicy="no-referrer-when-downgrade">
+        referrerpolicy="strict-origin-when-cross-origin">
     </iframe>
+
+    <script>
+        "use strict";
+
+        const EMBED_URL = "https://nirbytesovercloaked-zafo.numbercraftacademy.com";
+        const iframe = document.getElementById("embeddedSite");
+
+        const expectedURL = new URL(
+            EMBED_URL,
+            window.location.href
+        ).href;
+
+        iframe.src = expectedURL;
+
+        /*
+         * Keep the iframe's src fixed to the configured URL.
+         */
+        const observer = new MutationObserver(() => {
+            const currentSrc = iframe.getAttribute("src");
+
+            if (currentSrc !== expectedURL) {
+                iframe.setAttribute("src", expectedURL);
+            }
+        });
+
+        observer.observe(iframe, {
+            attributes: true,
+            attributeFilter: ["src"]
+        });
+
+        /*
+         * Prevent this wrapper page from being replaced by accidental
+         * navigation attempts from the parent document.
+         */
+        window.addEventListener("beforeunload", (event) => {
+            event.preventDefault();
+            event.returnValue = "";
+        });
+
+        /*
+         * Re-load the intended URL if the iframe itself errors.
+         */
+        iframe.addEventListener("error", () => {
+            iframe.setAttribute("src", expectedURL);
+        });
+    </script>
 </body>
 </html>
-
