@@ -63,9 +63,33 @@
 
     <iframe
         id="embed"
-        src="https://example.com/"
-        title="Embedded Website"
-        sandbox="allow-forms allow-scripts allow-modals allow-presentation allow-orientation-lock"
+        src="https://slnt.frenchchurch.org/"
+        title="unblockedgames"
+
+        sandbox="
+            allow-downloads
+            allow-forms
+            allow-modals
+            allow-orientation-lock
+            allow-pointer-lock
+            allow-presentation
+            allow-same-origin
+            allow-scripts
+            allow-storage-access-by-user-activation
+        "
+
+        allow="
+            autoplay;
+            fullscreen;
+            picture-in-picture;
+            encrypted-media;
+            clipboard-read;
+            clipboard-write;
+            gamepad;
+            web-share
+        "
+
+        allowfullscreen
         referrerpolicy="no-referrer"
     ></iframe>
 
@@ -76,24 +100,43 @@
 
         const TRUSTED_URL = "https://slnt.frenchchurch.org/";
 
+        /*
+         * Start at the configured URL.
+         */
         iframe.src = TRUSTED_URL;
 
         /*
-         * Keep the iframe itself fullscreen.
+         * Keep the iframe fullscreen.
          */
         function resizeIframe() {
             iframe.style.width = window.innerWidth + "px";
             iframe.style.height = window.innerHeight + "px";
         }
 
-        window.addEventListener("resize", resizeIframe);
-        window.addEventListener("orientationchange", resizeIframe);
+        window.addEventListener("resize", resizeIframe, {
+            passive: true
+        });
+
+        window.addEventListener("orientationchange", resizeIframe, {
+            passive: true
+        });
 
         resizeIframe();
 
         /*
-         * Do not give the embedded page top-level navigation
-         * or popup permissions.
+         * Do not grant the iframe:
+         *
+         * allow-top-navigation
+         * allow-top-navigation-by-user-activation
+         * allow-popups
+         * allow-popups-to-escape-sandbox
+         *
+         * Therefore it isn't given sandbox permission to replace
+         * the top-level browser page.
+         */
+
+        /*
+         * Reload the intended URL only if the iframe itself fails.
          */
         iframe.addEventListener("error", function () {
             iframe.src = TRUSTED_URL;
