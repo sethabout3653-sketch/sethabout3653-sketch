@@ -1,23 +1,36 @@
+
 FROM nginx:alpine
 
-# Default port for local testing (Render overrides $PORT dynamically at runtime)
-ENV PORT=10000
+# Remove default Nginx files
+RUN rm -rf /usr/share/nginx/html/*
 
-# Copy your HTML file into Nginx web root
+# Copy the website
 COPY index.html /usr/share/nginx/html/index.html
 
-# Generate the Nginx template cleanly without quote collisions
-RUN mkdir -p /etc/nginx/templates && \
-    echo "server {" > /etc/nginx/templates/default.conf.template && \
-    echo "    listen \${PORT};" >> /etc/nginx/templates/default.conf.template && \
-    echo "    location / {" >> /etc/nginx/templates/default.conf.template && \
-    echo "        root /usr/share/nginx/html;" >> /etc/nginx/templates/default.conf.template && \
-    echo "        index index.html;" >> /etc/nginx/templates/default.conf.template && \
-    echo "        add_header Content-Security-Policy \"default-src 'none'; frame-src *; style-src 'unsafe-inline';\" always;" >> /etc/nginx/templates/default.conf.template && \
-    echo "        add_header X-Frame-Options \"DENY\" always;" >> /etc/nginx/templates/default.conf.template && \
-    echo "        add_header X-Content-Type-Options \"nosniff\" always;" >> /etc/nginx/templates/default.conf.template && \
-    echo "        add_header Referrer-Policy \"no-referrer\" always;" >> /etc/nginx/templates/default.conf.template && \
-    echo "    }" >> /etc/nginx/templates/default.conf.template && \
-    echo "}" >> /etc/nginx/templates/default.conf.template
+# Configure Nginx for Render's expected web port
+RUN cat > /etc/nginx/conf.d/default.conf <<'EOF'
+server {
+    listen 10000;
+    listen [::]:10000;
+
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location = /index.html {
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+        add_header Pragma "no-cache";
+        add_header Expires "0";
+    }
+}
+EOF
 
 EXPOSE 10000
+
+CMD ["nginx", "-g", "daemon off;"]
+
