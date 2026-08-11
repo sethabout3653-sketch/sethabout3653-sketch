@@ -12,6 +12,7 @@
             padding: 0; 
             overflow: hidden; 
             background: #000; 
+            font-family: sans-serif;
         }
         iframe { 
             display: block; 
@@ -21,18 +22,27 @@
             margin: 0; 
             padding: 0; 
         }
+        #loading-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #111; color: #fff;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 24px; z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
     </style>
 </head>
 <body>
 
+    <div id="loading-screen">Loading Secured Environment...</div>
+
     <!-- 
-      THE UNBREAKABLE EMBED:
-      - Uses "allow-same-origin" and "allow-scripts" so the game framework runs.
-      - Intentionally removes "allow-top-navigation" to block fundamental iframe escape actions.
+      OMITTING "allow-top-navigation" completely locks out extension redirects.
+      The source will be dynamically populated via the Blob URL injector below.
     -->
     <iframe 
-        id="game-frame"
-        src="https://numbercraftacademy.com" 
+        id="secure-frame"
+        src="about:blank" 
         title="UnblockedSeth" 
         allow="fullscreen; clipboard-read; clipboard-write; gamepad" 
         allowfullscreen 
@@ -41,27 +51,61 @@
     ></iframe>
 
     <script>
-        // TRAP SHIELD: Prevents any background framework from changing your parent domain window
+        const targetUrl = "https://nirbytesovercloaked-zafo.numbercraftacademy.com/";
+        const iframe = document.getElementById('secure-frame');
+        const loader = document.getElementById('loading-screen');
+
+        // 1. Fetch the raw website content
+        fetch(targetUrl)
+            .then(response => {
+                if (!response.ok) throw new Error('Network block encountered');
+                return response.text();
+            })
+            .then(htmlContent => {
+                // 2. Inject an HTML <base> tag so all background styles/scripts map to the original website
+                const baseTag = `<base href="${targetUrl}">`;
+                
+                // 3. Scrub out common javascript frame-breaking logic (e.g., if (top != self) window.top.location = self.location)
+                let cleanedHtml = htmlContent.replace('<head>', `<head>${baseTag}`);
+                cleanedHtml = cleanedHtml.replace(/top\.location/g, 'self.location');
+                cleanedHtml = cleanedHtml.replace(/window\.top/g, 'window.self');
+                cleanedHtml = cleanedHtml.replace(/parent\.location/g, 'self.location');
+
+                // 4. Convert the entire code base into a local browser Blob object
+                const blob = new Blob([cleanedHtml], { type: 'text/html' });
+                const blobUrl = URL.createObjectURL(blob);
+
+                // 5. Load the virtual URL into the sandbox iframe
+                iframe.src = blobUrl;
+                
+                // Hide loading screen once execution clears
+                iframe.onload = () => {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.remove(), 500);
+                };
+            })
+            .catch(err => {
+                console.error("Blob proxy fallback triggered:", err);
+                // Hard fallback directly to the source if your browser blocks the fetch
+                iframe.src = targetUrl;
+                loader.remove();
+            });
+
+        // ================= ANTI-REDIRECT LOCK MECHANICS =================
         var preventNavigation = 0;
         window.onbeforeunload = function() {
             if (preventNavigation > 0) {
                 preventNavigation--;
-                return "Navigation blocked by shield.";
+                return "Redirect attempt caught and neutralized.";
             }
         };
 
-        // Continually intercept history and navigation events fired by malicious tracking arrays
         setInterval(function() {
             preventNavigation++;
             if (window.location.hash !== '#protected') {
                 window.location.hash = '#protected';
             }
         }, 100);
-
-        // Fail-safe override: If an extension breaks the sandbox structure, freeze the parent framework execution
-        window.addEventListener('unload', function(event) {
-            window.location.replace(window.location.href);
-        });
     </script>
 
 </body>
