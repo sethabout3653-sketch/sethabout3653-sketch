@@ -5,8 +5,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=10000
 
-COPY server.js /app/server.js
-COPY index.html /app/index.html
+COPY server.js .
+COPY index.html .
 
 RUN useradd \
     --system \
@@ -19,4 +19,4 @@ USER appuser
 
 EXPOSE 10000
 
-CMD ["node", "/app/server.js"]
+CMD ["node", "server.js"]
