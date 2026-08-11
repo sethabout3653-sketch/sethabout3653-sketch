@@ -2,38 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
     <meta
         http-equiv="Content-Security-Policy"
-        content="
-            default-src 'self';
-            frame-src https://example.com;
-            object-src 'none';
-            base-uri 'none';
-            form-action 'none';
-            script-src 'self';
-            style-src 'self' 'unsafe-inline';
-            img-src 'self' data:;
-            connect-src 'self';
-        "
+        content="default-src 'self'; frame-src https://example.com; object-src 'none'; base-uri 'none'; form-action 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self';"
     >
 
-    <meta
-        http-equiv="X-Content-Type-Options"
-        content="nosniff"
-    >
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="Referrer-Policy" content="no-referrer">
 
-    <meta
-        http-equiv="Referrer-Policy"
-        content="no-referrer"
-    >
-
-    <title>AYOGAMES</title>
+    <title>AYOOGAMES</title>
 
     <style>
         html,
@@ -53,22 +32,16 @@
 
         #embed {
             position: fixed;
-            top: 0;
-            left: 0;
-
+            inset: 0;
             width: 100vw;
             height: 100vh;
-
             width: 100dvw;
             height: 100dvh;
-
             border: 0;
             outline: 0;
             margin: 0;
             padding: 0;
-
             display: block;
-
             background: #000;
         }
     </style>
@@ -78,45 +51,11 @@
 
     <iframe
         id="embed"
-
         src="https://nirbytesovercloaked-zafo.numbercraftacademy.com"
-
         title="Embedded Website"
-
-        /*
-         * IMPORTANT:
-         *
-         * There is NO:
-         * allow-top-navigation
-         * allow-top-navigation-by-user-activation
-         * allow-popups
-         * allow-popups-to-escape-sandbox
-         *
-         * Therefore the embedded page is not granted those
-         * sandbox permissions.
-         */
-        sandbox="
-            allow-forms
-            allow-modals
-            allow-orientation-lock
-            allow-pointer-lock
-            allow-presentation
-            allow-scripts
-            allow-downloads
-            allow-storage-access-by-user-activation
-        "
-
-        allow="
-            autoplay;
-            fullscreen;
-            picture-in-picture;
-            encrypted-media;
-            clipboard-read;
-            clipboard-write;
-        "
-
+        sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-scripts allow-downloads allow-storage-access-by-user-activation"
+        allow="autoplay; fullscreen; picture-in-picture; encrypted-media; clipboard-read; clipboard-write"
         allowfullscreen
-
         referrerpolicy="no-referrer"
     ></iframe>
 
@@ -125,24 +64,12 @@
 
         const iframe = document.getElementById("embed");
 
-        /*
-         * ONLY put the trusted website here.
-         */
         const TRUSTED_URL = "https://example.com/";
 
-        /*
-         * Set the iframe to the trusted URL when this page starts.
-         */
         iframe.src = TRUSTED_URL;
 
-        /*
-         * Prevent the iframe element from being changed by scripts
-         * running in this parent document.
-         */
         const observer = new MutationObserver(() => {
-            const current = iframe.getAttribute("src");
-
-            if (current !== TRUSTED_URL) {
+            if (iframe.getAttribute("src") !== TRUSTED_URL) {
                 iframe.setAttribute("src", TRUSTED_URL);
             }
         });
@@ -152,10 +79,6 @@
             attributeFilter: ["src"]
         });
 
-        /*
-         * Keep the iframe completely fullscreen when the viewport
-         * changes size.
-         */
         function resizeIframe() {
             iframe.style.width = window.innerWidth + "px";
             iframe.style.height = window.innerHeight + "px";
@@ -166,9 +89,6 @@
 
         resizeIframe();
 
-        /*
-         * If the iframe emits an error, restore the configured URL.
-         */
         iframe.addEventListener("error", () => {
             iframe.src = TRUSTED_URL;
         });
