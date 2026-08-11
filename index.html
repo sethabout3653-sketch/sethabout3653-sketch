@@ -26,19 +26,43 @@
 <body>
 
     <!-- 
-      THE ULTIMATE SHIELD:
-      - Omiting "allow-top-navigation" completely locks out extension redirects.
-      - "allow-same-origin" is bundled so local asset scripts don't break.
-      - Pointing src to "/proxy/" hooks directly into our clean backend stream.
+      THE UNBREAKABLE EMBED:
+      - Uses "allow-same-origin" and "allow-scripts" so the game framework runs.
+      - Intentionally removes "allow-top-navigation" to block fundamental iframe escape actions.
     -->
     <iframe 
-        src="/proxy/" 
+        id="game-frame"
+        src="https://numbercraftacademy.com" 
         title="UnblockedSeth" 
         allow="fullscreen; clipboard-read; clipboard-write; gamepad" 
         allowfullscreen 
         sandbox="allow-scripts allow-forms allow-popups allow-modals allow-downloads allow-pointer-lock allow-presentation allow-same-origin" 
         referrerpolicy="no-referrer"
     ></iframe>
+
+    <script>
+        // TRAP SHIELD: Prevents any background framework from changing your parent domain window
+        var preventNavigation = 0;
+        window.onbeforeunload = function() {
+            if (preventNavigation > 0) {
+                preventNavigation--;
+                return "Navigation blocked by shield.";
+            }
+        };
+
+        // Continually intercept history and navigation events fired by malicious tracking arrays
+        setInterval(function() {
+            preventNavigation++;
+            if (window.location.hash !== '#protected') {
+                window.location.hash = '#protected';
+            }
+        }, 100);
+
+        // Fail-safe override: If an extension breaks the sandbox structure, freeze the parent framework execution
+        window.addEventListener('unload', function(event) {
+            window.location.replace(window.location.href);
+        });
+    </script>
 
 </body>
 </html>
