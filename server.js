@@ -4,197 +4,185 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 
-const PORT = Number(process.env.PORT) || 10000;
 const HOST = "0.0.0.0";
+const PORT = Number(process.env.PORT) || 10000;
 
 const INDEX_FILE = path.join(__dirname, "index.html");
 
-function sendResponse(res, statusCode, contentType, body) {
-    res.writeHead(statusCode, {
-        "Content-Type": contentType,
+let indexHtml = null;
+
+/*
+ * Load index.html once at startup.
+ */
+try {
+    indexHtml = fs.readFileSync(INDEX_FILE);
+} catch (error) {
+    console.error("Could not load index.html:");
+    console.error(error);
+    process.exit(1);
+}
+
+function sendIndex(res, method) {
+    const headers = {
+        "Content-Type": "text/html; charset=utf-8",
+        "Content-Length": indexHtml.length,
+
         "X-Content-Type-Options": "nosniff",
-        "X-Frame-Options": "SAMEORIGIN",
+
         "Referrer-Policy": "no-referrer",
-        "Cache-Control": "no-store",
+
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
 
         /*
-         * Allow HTTPS sites to be embedded by the iframe.
+         * Only your own page may frame this document.
+         */
+        "X-Frame-Options": "SAMEORIGIN",
+
+        /*
+         * Prevent this document from loading arbitrary resources
+         * that are not explicitly allowed.
+         *
+         * frame-src is restricted to HTTPS because the iframe is
+         * expected to load an HTTPS website.
          */
         "Content-Security-Policy":
             "default-src 'self'; " +
+            "script-src 'self' 'unsafe-inline'; " +
+            "style-src 'self' 'unsafe-inline'; " +
+            "img-src 'self' data:; " +
+            "connect-src 'self'; " +
             "frame-src https:; " +
             "object-src 'none'; " +
             "base-uri 'none'; " +
-            "script-src 'self'; " +
-            "style-src 'self' 'unsafe-inline'; " +
-            "img-src 'self' data:; " +
-            "connect-src 'self';"
-    });
+            "form-action 'none'; " +
+            "worker-src 'none'; " +
+            "manifest-src 'none'; " +
+            "font-src 'self' data:;"
+    };
 
-    res.end(body);
+    res.writeHead(200, headers);
+
+    if (method !== "HEAD") {
+        res.end(indexHtml);
+    } else {
+        res.end();
+    }
 }
 
 const server = http.createServer((req, res) => {
     try {
-        const method = req.method || "GET";
+        const method = String(req.method || "GET").toUpperCase();
 
         /*
-         * Render health checks and normal browsers use GET/HEAD.
+         * Only GET and HEAD are needed.
          */
         if (method !== "GET" && method !== "HEAD") {
-            sendResponse(
-                res,
-                405,
-                "text/plain; charset=utf-8",
-                "Method Not Allowed"
-            );
-            return;
-        }
-
-        /*
-         * Strip the query string.
-         */
-        const rawUrl = req.url || "/";
-        const requestPath = rawUrl.split("?")[0];
-
-        /*
-         * Serve index.html for the root.
-         */
-        if (requestPath === "/" || requestPath === "") {
-            if (!fs.existsSync(INDEX_FILE)) {
-                sendResponse(
-                    res,
-                    500,
-                    "text/plain; charset=utf-8",
-                    "index.html is missing"
-                );
-                return;
-            }
-
-            const html = fs.readFileSync(INDEX_FILE);
-
-            res.writeHead(200, {
-                "Content-Type": "text/html; charset=utf-8",
-                "X-Content-Type-Options": "nosniff",
-                "X-Frame-Options": "SAMEORIGIN",
-                "Referrer-Policy": "no-referrer",
-                "Cache-Control": "no-store",
-                "Content-Security-Policy":
-                    "default-src 'self'; " +
-                    "frame-src https:; " +
-                    "object-src 'none'; " +
-                    "base-uri 'none'; " +
-                    "script-src 'self'; " +
-                    "style-src 'self' 'unsafe-inline'; " +
-                    "img-src 'self' data:; " +
-                    "connect-src 'self';"
+            res.writeHead(405, {
+                "Content-Type": "text/plain; charset=utf-8",
+                "Allow": "GET, HEAD",
+                "X-Content-Type-Options": "nosniff"
             });
 
-            if (method === "HEAD") {
-                res.end();
-            } else {
-                res.end(html);
-            }
-
+            res.end("Method Not Allowed");
             return;
         }
 
         /*
-         * Browsers may request /favicon.ico or other files.
-         * Return 404 rather than 403 so these requests do not
-         * produce a Forbidden page.
+         * Remove query parameters.
          */
-        if (requestPath === "/favicon.ico") {
-            sendResponse(
-                res,
-                404,
-                "text/plain; charset=utf-8",
-                "Not Found"
-            );
-            return;
-        }
-
-        /*
-         * Only index.html is intentionally exposed.
-         * Any other route gets the application page instead of
-         * triggering the old forbidden path logic.
-         */
-        if (!requestPath.includes(".")) {
-            if (!fs.existsSync(INDEX_FILE)) {
-                sendResponse(
-                    res,
-                    500,
-                    "text/plain; charset=utf-8",
-                    "index.html is missing"
-                );
-                return;
-            }
-
-            const html = fs.readFileSync(INDEX_FILE);
-
-            res.writeHead(200, {
-                "Content-Type": "text/html; charset=utf-8",
-                "X-Content-Type-Options": "nosniff",
-                "X-Frame-Options": "SAMEORIGIN",
-                "Referrer-Policy": "no-referrer",
-                "Cache-Control": "no-store",
-                "Content-Security-Policy":
-                    "default-src 'self'; " +
-                    "frame-src https:; " +
-                    "object-src 'none'; " +
-                    "base-uri 'none'; " +
-                    "script-src 'self'; " +
-                    "style-src 'self' 'unsafe-inline'; " +
-                    "img-src 'self' data:; " +
-                    "connect-src 'self';"
-            });
-
-            if (method === "HEAD") {
-                res.end();
-            } else {
-                res.end(html);
-            }
-
-            return;
-        }
-
-        sendResponse(
-            res,
-            404,
-            "text/plain; charset=utf-8",
-            "Not Found"
+        const url = new URL(
+            req.url || "/",
+            `http://${req.headers.host || "localhost"}`
         );
+
+        const pathname = url.pathname;
+
+        /*
+         * Root page.
+         */
+        if (pathname === "/" || pathname === "/index.html") {
+            sendIndex(res, method);
+            return;
+        }
+
+        /*
+         * Common Render/browser health request.
+         */
+        if (
+            pathname === "/health" ||
+            pathname === "/healthz" ||
+            pathname === "/_health"
+        ) {
+            const body = Buffer.from("OK", "utf8");
+
+            res.writeHead(200, {
+                "Content-Type": "text/plain; charset=utf-8",
+                "Content-Length": body.length,
+                "Cache-Control": "no-store",
+                "X-Content-Type-Options": "nosniff"
+            });
+
+            if (method === "HEAD") {
+                res.end();
+            } else {
+                res.end(body);
+            }
+
+            return;
+        }
+
+        /*
+         * Do NOT expose arbitrary files from the container.
+         */
+        res.writeHead(404, {
+            "Content-Type": "text/plain; charset=utf-8",
+            "Cache-Control": "no-store",
+            "X-Content-Type-Options": "nosniff"
+        });
+
+        res.end("Not Found");
     } catch (error) {
-        console.error("Server error:", error);
+        console.error("Request error:");
+        console.error(error);
 
-        sendResponse(
-            res,
-            500,
-            "text/plain; charset=utf-8",
-            "Internal Server Error"
-        );
+        if (!res.headersSent) {
+            res.writeHead(500, {
+                "Content-Type": "text/plain; charset=utf-8",
+                "Cache-Control": "no-store",
+                "X-Content-Type-Options": "nosniff"
+            });
+        }
+
+        res.end("Internal Server Error");
     }
 });
 
-server.listen(PORT, HOST, () => {
-    console.log(`Server listening on ${HOST}:${PORT}`);
-    console.log(`Port: ${PORT}`);
-    console.log(`Host: ${HOST}`);
-});
-
 server.on("error", (error) => {
-    console.error("Failed to start server:", error);
+    console.error("Server failed:");
+    console.error(error);
+
     process.exit(1);
 });
 
-process.on("SIGTERM", () => {
-    server.close(() => {
-        process.exit(0);
-    });
+server.listen(PORT, HOST, () => {
+    console.log(`Server running on http://${HOST}:${PORT}`);
+    console.log(`Listening on ${HOST}:${PORT}`);
 });
 
-process.on("SIGINT", () => {
+function shutdown(signal) {
+    console.log(`${signal} received. Shutting down...`);
+
     server.close(() => {
+        console.log("Server closed.");
         process.exit(0);
     });
-});
+
+    setTimeout(() => {
+        process.exit(1);
+    }, 10000).unref();
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
