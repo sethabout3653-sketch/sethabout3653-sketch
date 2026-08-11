@@ -1,40 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>UnblockedSeth</title>
-
-	<style>
-		html,
-		body {
-			width: 100%;
-			height: 100%;
-			margin: 0;
-			padding: 0;
-			overflow: hidden;
-			background: #000;
-		}
-
-		iframe {
-			display: block;
-			width: 100vw;
-			height: 100vh;
-			border: 0;
-			margin: 0;
-			padding: 0;
-		}
-	</style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://nirbytesovercloaked-zafo.numbercraftacademy.com; style-src 'self' 'unsafe-inline'; frame-src 'self' https://nirbytesovercloaked-zafo.numbercraftacademy.com;">
+    <title>UnblockedSeth</title>
+    <style>
+        html, body { 
+            width: 100%; 
+            height: 100%; 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            background: #000; 
+        }
+        iframe { 
+            display: block; 
+            width: 100vw; 
+            height: 100vh; 
+            border: 0; 
+            margin: 0; 
+            padding: 0; 
+        }
+    </style>
 </head>
-
 <body>
-	<iframe
-		src="https://nirbytesovercloaked-zafo.numbercraftacademy.com/"
-		title="UnblockedSeth"
-		allow="fullscreen"
-		allowfullscreen
-		sandbox="allow-scripts allow-forms allow-popups allow-modals allow-downloads allow-pointer-lock allow-presentation"
-		referrerpolicy="no-referrer"
-	></iframe>
+
+    <!-- 
+      ANTI-REDIRECT PROTECTION: 
+      The sandbox explicitly omits "allow-top-navigation" or "allow-top-navigation-by-user-activation".
+      This completely strips the iframe's ability to redirect your main parent tab.
+    -->
+    <iframe 
+        src="https://nirbytesovercloaked-zafo.numbercraftacademy.com/" 
+        title="UnblockedSeth" 
+        allow="fullscreen" 
+        allowfullscreen 
+        sandbox="allow-scripts allow-forms allow-popups allow-modals allow-downloads allow-pointer-lock allow-presentation allow-same-origin" 
+        referrerpolicy="no-referrer"
+    ></iframe>
+
 </body>
 </html>
