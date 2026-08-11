@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0, viewport-fit=cover"
@@ -17,13 +18,9 @@
         content="no-referrer"
     >
 
-    <title>GAMESAYOO</title>
+    <title>Embedded Website</title>
 
     <style>
-        * {
-            box-sizing: border-box;
-        }
-
         html,
         body {
             width: 100%;
@@ -43,13 +40,13 @@
             position: fixed;
             inset: 0;
 
-            display: block;
-
             width: 100vw;
             height: 100vh;
 
             width: 100dvw;
             height: 100dvh;
+
+            display: block;
 
             margin: 0;
             padding: 0;
@@ -64,111 +61,44 @@
 
 <body>
 
-<iframe
-    id="embed"
-    title="Embedded Website"
+    <iframe
+        id="embed"
+        src="https://example.com/"
+        title="Embedded Website"
+        sandbox="allow-forms allow-scripts allow-modals allow-presentation allow-orientation-lock"
+        referrerpolicy="no-referrer"
+    ></iframe>
 
-    src="https://example.com"
+    <script>
+        "use strict";
 
-    /*
-     * IMPORTANT:
-     *
-     * There is intentionally NO:
-     *
-     * allow-same-origin
-     * allow-top-navigation
-     * allow-top-navigation-by-user-activation
-     * allow-popups
-     * allow-popups-to-escape-sandbox
-     *
-     * The iframe therefore receives an opaque origin and cannot
-     * use the sandbox permissions to navigate the top-level page.
-     */
-    sandbox="
-        allow-forms
-        allow-scripts
-        allow-modals
-        allow-presentation
-        allow-orientation-lock
-    "
+        const iframe = document.getElementById("embed");
 
-    referrerpolicy="no-referrer"
-></iframe>
+        const TRUSTED_URL = "https://example.com/";
 
-<script>
-"use strict";
+        iframe.src = TRUSTED_URL;
 
-const iframe = document.getElementById("embed");
+        /*
+         * Keep the iframe itself fullscreen.
+         */
+        function resizeIframe() {
+            iframe.style.width = window.innerWidth + "px";
+            iframe.style.height = window.innerHeight + "px";
+        }
 
-/*
- * ONLY put a website here that you trust.
- */
-const TRUSTED_URL = "https://slnt.frenchchurch.org/";
+        window.addEventListener("resize", resizeIframe);
+        window.addEventListener("orientationchange", resizeIframe);
 
-/*
- * Force the initial URL.
- */
-iframe.src = TRUSTED_URL;
+        resizeIframe();
 
-/*
- * Keep the iframe element itself from being changed by this page.
- */
-const iframeObserver = new MutationObserver(() => {
-    const current = iframe.getAttribute("src");
-
-    if (current !== TRUSTED_URL) {
-        iframe.setAttribute("src", TRUSTED_URL);
-    }
-});
-
-iframeObserver.observe(iframe, {
-    attributes: true,
-    attributeFilter: ["src"]
-});
-
-/*
- * Keep the iframe fullscreen.
- */
-function resizeIframe() {
-    iframe.style.width = `${window.innerWidth}px`;
-    iframe.style.height = `${window.innerHeight}px`;
-}
-
-window.addEventListener("resize", resizeIframe, {
-    passive: true
-});
-
-window.addEventListener("orientationchange", resizeIframe, {
-    passive: true
-});
-
-resizeIframe();
-
-/*
- * If the iframe element reports an error, restore the
- * configured URL.
- */
-iframe.addEventListener("error", () => {
-    iframe.src = TRUSTED_URL;
-});
-
-/*
- * Make sure this parent page does not intentionally navigate
- * anywhere. There is no location assignment anywhere in this
- * application.
- */
-window.addEventListener("click", (event) => {
-    const target = event.target;
-
-    if (
-        target instanceof HTMLAnchorElement &&
-        target.target === "_top"
-    ) {
-        event.preventDefault();
-        event.stopPropagation();
-    }
-});
-</script>
+        /*
+         * Do not give the embedded page top-level navigation
+         * or popup permissions.
+         */
+        iframe.addEventListener("error", function () {
+            iframe.src = TRUSTED_URL;
+        });
+    </script>
 
 </body>
 </html>
