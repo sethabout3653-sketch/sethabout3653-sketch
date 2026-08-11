@@ -2,14 +2,38 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    >
 
     <meta
         http-equiv="Content-Security-Policy"
-        content="default-src 'self'; frame-src https:; child-src https:; object-src 'none'; base-uri 'none'; form-action 'none';"
+        content="
+            default-src 'self';
+            frame-src https://example.com;
+            object-src 'none';
+            base-uri 'none';
+            form-action 'none';
+            script-src 'self';
+            style-src 'self' 'unsafe-inline';
+            img-src 'self' data:;
+            connect-src 'self';
+        "
     >
 
-    <title>UnblockedAYOOOOO</title>
+    <meta
+        http-equiv="X-Content-Type-Options"
+        content="nosniff"
+    >
+
+    <meta
+        http-equiv="Referrer-Policy"
+        content="no-referrer"
+    >
+
+    <title>AYOGAMES</title>
 
     <style>
         html,
@@ -22,84 +46,104 @@
             background: #000;
         }
 
-        iframe {
+        body {
             position: fixed;
             inset: 0;
+        }
+
+        #embed {
+            position: fixed;
+            top: 0;
+            left: 0;
+
             width: 100vw;
             height: 100vh;
+
             width: 100dvw;
             height: 100dvh;
+
             border: 0;
+            outline: 0;
             margin: 0;
             padding: 0;
+
             display: block;
+
             background: #000;
         }
     </style>
 </head>
 
 <body>
+
     <iframe
-        id="embeddedSite"
+        id="embed"
+
         src="https://nirbytesovercloaked-zafo.numbercraftacademy.com"
+
         title="Embedded Website"
-        allow="
-            accelerometer;
-            autoplay;
-            camera;
-            clipboard-read;
-            clipboard-write;
-            display-capture;
-            encrypted-media;
-            fullscreen;
-            geolocation;
-            gyroscope;
-            microphone;
-            midi;
-            payment;
-            picture-in-picture;
-            publickey-credentials-get;
-            screen-wake-lock;
-            usb;
-            web-share;
-            xr-spatial-tracking
-        "
-        allowfullscreen
+
+        /*
+         * IMPORTANT:
+         *
+         * There is NO:
+         * allow-top-navigation
+         * allow-top-navigation-by-user-activation
+         * allow-popups
+         * allow-popups-to-escape-sandbox
+         *
+         * Therefore the embedded page is not granted those
+         * sandbox permissions.
+         */
         sandbox="
-            allow-downloads
             allow-forms
             allow-modals
             allow-orientation-lock
             allow-pointer-lock
             allow-presentation
-            allow-same-origin
             allow-scripts
+            allow-downloads
             allow-storage-access-by-user-activation
         "
-        referrerpolicy="strict-origin-when-cross-origin">
-    </iframe>
+
+        allow="
+            autoplay;
+            fullscreen;
+            picture-in-picture;
+            encrypted-media;
+            clipboard-read;
+            clipboard-write;
+        "
+
+        allowfullscreen
+
+        referrerpolicy="no-referrer"
+    ></iframe>
 
     <script>
         "use strict";
 
-        const EMBED_URL = "https://nirbytesovercloaked-zafo.numbercraftacademy.com";
-        const iframe = document.getElementById("embeddedSite");
-
-        const expectedURL = new URL(
-            EMBED_URL,
-            window.location.href
-        ).href;
-
-        iframe.src = expectedURL;
+        const iframe = document.getElementById("embed");
 
         /*
-         * Keep the iframe's src fixed to the configured URL.
+         * ONLY put the trusted website here.
+         */
+        const TRUSTED_URL = "https://example.com/";
+
+        /*
+         * Set the iframe to the trusted URL when this page starts.
+         */
+        iframe.src = TRUSTED_URL;
+
+        /*
+         * Prevent the iframe element from being changed by scripts
+         * running in this parent document.
          */
         const observer = new MutationObserver(() => {
-            const currentSrc = iframe.getAttribute("src");
+            const current = iframe.getAttribute("src");
 
-            if (currentSrc !== expectedURL) {
-                iframe.setAttribute("src", expectedURL);
+            if (current !== TRUSTED_URL) {
+                iframe.setAttribute("src", TRUSTED_URL);
             }
         });
 
@@ -109,20 +153,26 @@
         });
 
         /*
-         * Prevent this wrapper page from being replaced by accidental
-         * navigation attempts from the parent document.
+         * Keep the iframe completely fullscreen when the viewport
+         * changes size.
          */
-        window.addEventListener("beforeunload", (event) => {
-            event.preventDefault();
-            event.returnValue = "";
-        });
+        function resizeIframe() {
+            iframe.style.width = window.innerWidth + "px";
+            iframe.style.height = window.innerHeight + "px";
+        }
+
+        window.addEventListener("resize", resizeIframe);
+        window.addEventListener("orientationchange", resizeIframe);
+
+        resizeIframe();
 
         /*
-         * Re-load the intended URL if the iframe itself errors.
+         * If the iframe emits an error, restore the configured URL.
          */
         iframe.addEventListener("error", () => {
-            iframe.setAttribute("src", expectedURL);
+            iframe.src = TRUSTED_URL;
         });
     </script>
+
 </body>
 </html>
