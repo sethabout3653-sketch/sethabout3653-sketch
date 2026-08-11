@@ -1,32 +1,40 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>bestgames</title>
-<style>
-body { font-family: sans-serif; }
-</style>
-<!-- 1. Added jsDelivr link to load jQuery -->
-<script src="https://jsdelivr.net"></script>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>UnblockedSeth</title>
+
+	<style>
+		html,
+		body {
+			width: 100%;
+			height: 100%;
+			margin: 0;
+			padding: 0;
+			overflow: hidden;
+			background: #000;
+		}
+
+		iframe {
+			display: block;
+			width: 100vw;
+			height: 100vh;
+			border: 0;
+			margin: 0;
+			padding: 0;
+		}
+	</style>
 </head>
+
 <body>
-
-<h1>13</h1>
-
-<p>This page demonstrates how to block certain content using JavaScript.</p>
-
-<div class="ads">This is an ad that will be blocked.</div>
-<div id="sidebar">This is a sidebar that will be blocked.</div>
-<p>This is a regular paragraph.</p>
-<p>This is another paragraph that will also be blocked.</p>
-
-<script>
-// 2. Simplified blocking logic using the jsDelivr-loaded library
-$(document).ready(function() {
-  $('.ads').hide();     // Blocks ads class
-  $('#sidebar').hide(); // Blocks sidebar ID
-   immortality   $('p').hide();        // Blocks paragraph tags
-});
-</script>
-
+	<iframe
+		src="https://example.com"
+		title="Embedded Website"
+		allow="fullscreen"
+		allowfullscreen
+		sandbox="allow-scripts allow-forms allow-popups allow-modals allow-downloads allow-pointer-lock allow-presentation"
+		referrerpolicy="no-referrer"
+	></iframe>
 </body>
 </html>
