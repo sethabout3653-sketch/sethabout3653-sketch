@@ -1,7 +1,14 @@
-FROM ghcr.io/techarohq/anubis:latest
-COPY index.html /index.html
-ENV BIND=":8080"
-ENV SERVE_ROBOTS_TXT="true"
-ENV TARGET="file:///index.html"
-ENV USE_REMOTE_ADDRESS="true"
-EXPOSE 8080
+# Step 1: Use an Nginx lightweight base to instantly serve your HTML page
+FROM nginx:alpine
+
+# Step 2: Copy your HTML file into Nginx's default directory
+COPY ./index.html /usr/share/nginx/html
+
+# Step 3: Pull the Anubis binary straight from GitHub into this same container
+COPY --from=ghcr.io/techarohq/anubis:latest /app/anubis /usr/local/bin/anubis
+
+# Step 4: Open port 8000 internally for Render
+EXPOSE 80
+
+# FIX: Start Nginx as a background daemon, wait 2 seconds, then boot Anubis
+CMD ["sh", "-c", "nginx -g 'daemon on;' && sleep 2 && anubis --bind :$PORT --target http://localhost:80 --difficulty 3"]
