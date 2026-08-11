@@ -26,9 +26,9 @@
 <body>
 
     <!-- 
-      THE FIX: The iframe starts with a safe data-URI layout context.
-      Our Javascript snippet below will inject the target application 
-      directly into the frame context, bypassing strict framing block headers.
+      ANTI-REDIRECT PROTECTION: 
+      Omitting "allow-top-navigation" inside the sandbox attribute prevents 
+      malicious extensions or injected scripts from redirecting the main browser tab.
     -->
     <iframe 
         id="secure-frame"
@@ -41,29 +41,28 @@
     ></iframe>
 
     <script>
-        // Target unblocked gaming proxy link 
-        const targetUrl = "https://numbercraftacademy.com";
+        const targetUrl = "https://nirbytesovercloaked-zafo.numbercraftacademy.com/";
         const iframe = document.getElementById('secure-frame');
 
-        // Bypasses X-Frame-Options headers by drawing the content dynamically inside a blob window context
+        // Dynamically fetch and display the source to override standard header blocks
         fetch(targetUrl)
             .then(response => {
-                if (!response.ok) throw new Error('Network error');
+                if (!response.ok) throw new Error('Network response failure');
                 return response.text();
             })
             .then(htmlContent => {
-                // Injects base tags so assets relative to the original domain still load correctly
+                // Injects an HTML base tag so relative asset routes map correctly
                 const baseTag = `<base href="${targetUrl}">`;
                 const correctedHtml = htmlContent.replace('<head>', `<head>${baseTag}`);
                 
-                // Write the code execution layer directly into the iframe target
+                // Write content directly into the frame window execution context
                 const frameDoc = iframe.contentWindow.document || iframe.contentDocument;
                 frameDoc.open();
                 frameDoc.write(correctedHtml);
                 frameDoc.close();
             })
             .catch(err => {
-                // Fallback direct load if the proxy domain clears its strict CORS blocks
+                // Instant fallback if background assets direct-load
                 iframe.src = targetUrl;
             });
     </script>
