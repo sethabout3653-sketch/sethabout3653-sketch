@@ -3,15 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Embedded Secure Viewer</title>
-    
-    <!-- Meta CSP: Blocks all parent-level scripts. Stops AI extensions from injecting redirects here. -->
+    <title>Embedded Viewer</title>
+
+    <!-- Meta CSP: Blocks any AI extensions from running scripts in the parent tab -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; frame-src *; style-src 'unsafe-inline';">
-    
+
     <style>
-        body, html {
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
             width: 100vw;
             height: 100vh;
             overflow: hidden;
@@ -20,23 +23,27 @@
         iframe {
             width: 100%;
             height: 100%;
-            border: none;
+            border: 0;
             display: block;
         }
     </style>
 </head>
 <body>
+
     <!-- 
-      Sandbox attributes intentionally MISSING to ensure security:
-      - allow-popups (blocks new tabs/windows)
-      - allow-top-navigation (blocks redirecting the current parent tab)
-      - allow-top-navigation-by-user-activation
+      SANDBOX SECURITY:
+      - Allowed: scripts, same-origin, forms inside the frame.
+      - Blocked (by omission):
+        * NO allow-popups (blocks new tabs)
+        * NO allow-top-navigation (blocks current tab redirect)
+        * NO allow-top-navigation-by-user-activation
     -->
     <iframe 
         src="https://example.com" 
         allowfullscreen 
         sandbox="allow-scripts allow-same-origin allow-forms"
-        title="Full Screen Embed">
+        title="Embedded Content">
     </iframe>
+
 </body>
 </html>
