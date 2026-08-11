@@ -7,115 +7,184 @@ const path = require("path");
 const PORT = Number(process.env.PORT) || 10000;
 const HOST = "0.0.0.0";
 
-const publicDirectory = path.join(__dirname, "public");
-const indexFile = path.join(publicDirectory, "index.html");
+const INDEX_FILE = path.join(__dirname, "index.html");
+
+function sendResponse(res, statusCode, contentType, body) {
+    res.writeHead(statusCode, {
+        "Content-Type": contentType,
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "SAMEORIGIN",
+        "Referrer-Policy": "no-referrer",
+        "Cache-Control": "no-store",
+
+        /*
+         * Allow HTTPS sites to be embedded by the iframe.
+         */
+        "Content-Security-Policy":
+            "default-src 'self'; " +
+            "frame-src https:; " +
+            "object-src 'none'; " +
+            "base-uri 'none'; " +
+            "script-src 'self'; " +
+            "style-src 'self' 'unsafe-inline'; " +
+            "img-src 'self' data:; " +
+            "connect-src 'self';"
+    });
+
+    res.end(body);
+}
 
 const server = http.createServer((req, res) => {
     try {
-        if (req.method !== "GET" && req.method !== "HEAD") {
-            res.writeHead(405, {
-                "Content-Type": "text/plain; charset=utf-8",
-                "Allow": "GET, HEAD"
+        const method = req.method || "GET";
+
+        /*
+         * Render health checks and normal browsers use GET/HEAD.
+         */
+        if (method !== "GET" && method !== "HEAD") {
+            sendResponse(
+                res,
+                405,
+                "text/plain; charset=utf-8",
+                "Method Not Allowed"
+            );
+            return;
+        }
+
+        /*
+         * Strip the query string.
+         */
+        const rawUrl = req.url || "/";
+        const requestPath = rawUrl.split("?")[0];
+
+        /*
+         * Serve index.html for the root.
+         */
+        if (requestPath === "/" || requestPath === "") {
+            if (!fs.existsSync(INDEX_FILE)) {
+                sendResponse(
+                    res,
+                    500,
+                    "text/plain; charset=utf-8",
+                    "index.html is missing"
+                );
+                return;
+            }
+
+            const html = fs.readFileSync(INDEX_FILE);
+
+            res.writeHead(200, {
+                "Content-Type": "text/html; charset=utf-8",
+                "X-Content-Type-Options": "nosniff",
+                "X-Frame-Options": "SAMEORIGIN",
+                "Referrer-Policy": "no-referrer",
+                "Cache-Control": "no-store",
+                "Content-Security-Policy":
+                    "default-src 'self'; " +
+                    "frame-src https:; " +
+                    "object-src 'none'; " +
+                    "base-uri 'none'; " +
+                    "script-src 'self'; " +
+                    "style-src 'self' 'unsafe-inline'; " +
+                    "img-src 'self' data:; " +
+                    "connect-src 'self';"
             });
 
-            res.end("Method Not Allowed");
+            if (method === "HEAD") {
+                res.end();
+            } else {
+                res.end(html);
+            }
+
             return;
         }
 
-        let requestedPath = req.url || "/";
-
-        requestedPath = requestedPath.split("?")[0];
-
-        if (requestedPath === "/" || requestedPath === "") {
-            requestedPath = "/index.html";
-        }
-
-        const decodedPath = decodeURIComponent(requestedPath);
-
-        const normalizedPath = path.normalize(decodedPath);
-
-        if (
-            normalizedPath.includes("..") ||
-            normalizedPath.startsWith("\\") ||
-            path.isAbsolute(normalizedPath)
-        ) {
-            res.writeHead(403);
-            res.end("Forbidden");
+        /*
+         * Browsers may request /favicon.ico or other files.
+         * Return 404 rather than 403 so these requests do not
+         * produce a Forbidden page.
+         */
+        if (requestPath === "/favicon.ico") {
+            sendResponse(
+                res,
+                404,
+                "text/plain; charset=utf-8",
+                "Not Found"
+            );
             return;
         }
 
-        const filePath = path.join(publicDirectory, normalizedPath);
+        /*
+         * Only index.html is intentionally exposed.
+         * Any other route gets the application page instead of
+         * triggering the old forbidden path logic.
+         */
+        if (!requestPath.includes(".")) {
+            if (!fs.existsSync(INDEX_FILE)) {
+                sendResponse(
+                    res,
+                    500,
+                    "text/plain; charset=utf-8",
+                    "index.html is missing"
+                );
+                return;
+            }
 
-        if (!filePath.startsWith(publicDirectory)) {
-            res.writeHead(403);
-            res.end("Forbidden");
+            const html = fs.readFileSync(INDEX_FILE);
+
+            res.writeHead(200, {
+                "Content-Type": "text/html; charset=utf-8",
+                "X-Content-Type-Options": "nosniff",
+                "X-Frame-Options": "SAMEORIGIN",
+                "Referrer-Policy": "no-referrer",
+                "Cache-Control": "no-store",
+                "Content-Security-Policy":
+                    "default-src 'self'; " +
+                    "frame-src https:; " +
+                    "object-src 'none'; " +
+                    "base-uri 'none'; " +
+                    "script-src 'self'; " +
+                    "style-src 'self' 'unsafe-inline'; " +
+                    "img-src 'self' data:; " +
+                    "connect-src 'self';"
+            });
+
+            if (method === "HEAD") {
+                res.end();
+            } else {
+                res.end(html);
+            }
+
             return;
         }
 
-        if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
-            res.writeHead(404);
-            res.end("Not Found");
-            return;
-        }
-
-        const extension = path.extname(filePath).toLowerCase();
-
-        let contentType = "application/octet-stream";
-
-        if (extension === ".html") {
-            contentType = "text/html; charset=utf-8";
-        } else if (extension === ".css") {
-            contentType = "text/css; charset=utf-8";
-        } else if (extension === ".js") {
-            contentType = "application/javascript; charset=utf-8";
-        } else if (extension === ".json") {
-            contentType = "application/json; charset=utf-8";
-        } else if (extension === ".png") {
-            contentType = "image/png";
-        } else if (extension === ".jpg" || extension === ".jpeg") {
-            contentType = "image/jpeg";
-        } else if (extension === ".gif") {
-            contentType = "image/gif";
-        } else if (extension === ".svg") {
-            contentType = "image/svg+xml";
-        } else if (extension === ".ico") {
-            contentType = "image/x-icon";
-        } else if (extension === ".webp") {
-            contentType = "image/webp";
-        }
-
-        res.writeHead(200, {
-            "Content-Type": contentType,
-            "X-Content-Type-Options": "nosniff",
-            "X-Frame-Options": "SAMEORIGIN",
-            "Referrer-Policy": "no-referrer",
-            "Cache-Control": extension === ".html"
-                ? "no-store"
-                : "public, max-age=3600"
-        });
-
-        if (req.method === "HEAD") {
-            res.end();
-            return;
-        }
-
-        const data = fs.readFileSync(filePath);
-
-        res.end(data);
-
+        sendResponse(
+            res,
+            404,
+            "text/plain; charset=utf-8",
+            "Not Found"
+        );
     } catch (error) {
-        console.error(error);
+        console.error("Server error:", error);
 
-        res.writeHead(500, {
-            "Content-Type": "text/plain; charset=utf-8"
-        });
-
-        res.end("Internal Server Error");
+        sendResponse(
+            res,
+            500,
+            "text/plain; charset=utf-8",
+            "Internal Server Error"
+        );
     }
 });
 
 server.listen(PORT, HOST, () => {
-    console.log(`Server running on http://${HOST}:${PORT}`);
+    console.log(`Server listening on ${HOST}:${PORT}`);
+    console.log(`Port: ${PORT}`);
+    console.log(`Host: ${HOST}`);
+});
+
+server.on("error", (error) => {
+    console.error("Failed to start server:", error);
+    process.exit(1);
 });
 
 process.on("SIGTERM", () => {
