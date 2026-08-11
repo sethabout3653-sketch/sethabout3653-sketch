@@ -34,11 +34,11 @@
 </head>
 <body>
 
-    <div id="loading-screen">Loading Secured Environment...</div>
+    <div id="loading-screen">Bypassing Security Restraints...</div>
 
     <!-- 
       OMITTING "allow-top-navigation" completely locks out extension redirects.
-      The source will be dynamically populated via the Blob URL injector below.
+      The source will be dynamically populated via the CORS-bypassed Blob URL injector below.
     -->
     <iframe 
         id="secure-frame"
@@ -51,21 +51,25 @@
     ></iframe>
 
     <script>
-        const targetUrl = "https://nirbytesovercloaked-zafo.numbercraftacademy.com/";
+        const targetUrl = "https://numbercraftacademy.com";
+        
+        // Public open-source CORS proxy to bypass "failed to fetch html content" restrictions
+        const corsProxy = "https://allorigins.win";
+        
         const iframe = document.getElementById('secure-frame');
         const loader = document.getElementById('loading-screen');
 
-        // 1. Fetch the raw website content
-        fetch(targetUrl)
+        // 1. Fetch the raw website content through the CORS proxy bypass route
+        fetch(corsProxy + encodeURIComponent(targetUrl))
             .then(response => {
-                if (!response.ok) throw new Error('Network block encountered');
+                if (!response.ok) throw new Error('Proxy communication block');
                 return response.text();
             })
             .then(htmlContent => {
-                // 2. Inject an HTML <base> tag so all background styles/scripts map to the original website
+                // 2. Inject an HTML <base> tag so all background styles/scripts map back to the original website
                 const baseTag = `<base href="${targetUrl}">`;
                 
-                // 3. Scrub out common javascript frame-breaking logic (e.g., if (top != self) window.top.location = self.location)
+                // 3. Scrub out common JavaScript frame-breaking logic that causes breakouts or redirects
                 let cleanedHtml = htmlContent.replace('<head>', `<head>${baseTag}`);
                 cleanedHtml = cleanedHtml.replace(/top\.location/g, 'self.location');
                 cleanedHtml = cleanedHtml.replace(/window\.top/g, 'window.self');
@@ -85,8 +89,8 @@
                 };
             })
             .catch(err => {
-                console.error("Blob proxy fallback triggered:", err);
-                // Hard fallback directly to the source if your browser blocks the fetch
+                console.error("Embedding failure:", err);
+                // Hard fallback directly to the source if the public proxy fails
                 iframe.src = targetUrl;
                 loader.remove();
             });
