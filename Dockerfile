@@ -11,13 +11,14 @@ RUN apk update && apk add --no-cache \
     nginx-module-vts \
     && rm -rf /var/cache/apk/*
 
-# --- Start of Embedded Nginx Configuration ---
-
 # Create Nginx cache and temp directories
 RUN mkdir -p /var/cache/nginx /var/tmp/nginx
 
-# Write the main Nginx configuration
-RUN echo 'user nginx; \
+# --- Embedded Nginx Configuration ---
+# We'll write the configuration to the file directly.
+# Using a heredoc is often cleaner than multiple echo statements or complex quoting.
+RUN printf '%s\n' \
+'user nginx; \
 worker_processes auto; \
 pid /run/nginx.pid; \
 include /etc/nginx/modules-enabled/*.conf; \
@@ -101,17 +102,14 @@ http { \
 RUN mkdir -p /usr/share/nginx/html && \
     echo '<html><body><h1>Something went wrong!</h1></body></html>' > /usr/share/nginx/html/50x.html
 
-# Copy your website's static files IF this container is serving them directly.
-# If this Nginx is purely a proxy, you might not need this.
-# COPY html/ /usr/share/nginx/html/
+# --- EXPOSE PORTS ---
+# These are now outside the string literal, so they are proper Dockerfile instructions.
+EXPOSE 80
+EXPOSE 443 # If you plan to configure SSL
 
 # Copy custom entrypoint script
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
-
-# Expose ports
-EXPOSE 80
-EXPOSE 443 # If you plan to configure SSL
 
 # Use the entrypoint script
 ENTRYPOINT ["/docker-entrypoint.sh"]
