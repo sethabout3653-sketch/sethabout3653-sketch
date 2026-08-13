@@ -2,231 +2,95 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    <meta http-equiv="Referrer-Policy" content="no-referrer">
-
-    <title>unblockedgames</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AYOGAMES</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         html, body {
             width: 100%;
             height: 100%;
-            margin: 0;
-            padding: 0;
             overflow: hidden;
-            background: #000;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #0f172a;
         }
 
-        body {
-            position: fixed;
-            inset: 0;
-        }
-
-        #embed-container {
-            position: fixed;
-            inset: 0;
-            width: 100vw;
-            height: 100vh;
-            width: 100dvw;
-            height: 100dvh;
-            display: block;
-            margin: 0;
-            padding: 0;
-            border: 0;
-            outline: 0;
-            background: #000;
+        /* Fullscreen Embedded Website */
+        .site-container {
+            width: 100%;
+            height: 100%;
+            border: none;
+            position: absolute;
+            top: 0;
+            left: 0;
             z-index: 1;
         }
 
-        iframe {
+        /* Permanent Infinite Loading Overlay */
+        .loader-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            border: 0;
-            outline: 0;
-            display: block;
-            background: #000;
+            z-index: 9999;
+            background: rgba(15, 23, 42, 0.85); /* Dark semi-transparent background */
+            backdrop-filter: blur(8px);          /* Blurs the underlying site */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #f8fafc;
+
+            /* 
+              Uncomment the line below if you want users to be able to click 
+              and interact with the website while the spinner is active:
+            */
+            /* pointer-events: none; */
         }
 
-        #forever-loader {
-            display: none;
-            width: 0;
-            height: 0;
-            border: 0;
+        /* Spinner Animation */
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.15);
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.9s cubic-bezier(0.6, 0.2, 0.4, 0.8) infinite;
+            margin-bottom: 18px;
+        }
+
+        @keyframes spin {
+            0%   { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loader-text {
+            font-size: 1.1rem;
+            font-weight: 500;
+            letter-spacing: 0.03em;
+            opacity: 0.9;
         }
     </style>
 </head>
-
 <body>
 
-    <div id="embed-container">
-        <iframe
-            id="embed"
-            title="unblockedgames"
-            allow="
-                autoplay;
-                fullscreen;
-                picture-in-picture;
-                encrypted-media;
-                clipboard-read;
-                clipboard-write;
-                gamepad;
-                web-share
-            "
-            allowfullscreen
-            referrerpolicy="no-referrer"
-        ></iframe>
+    <!-- Replace the src URL with the website you want to embed -->
+    <iframe 
+        class="site-container" 
+        src="https://homeworkhelp.asturkiters.es/" 
+        title="Embedded Content">
+    </iframe>
+
+    <!-- Infinite Loader Overlay -->
+    <div class="loader-overlay">
+        <div class="spinner"></div>
+        <div class="loader-text">Loading page...</div>
     </div>
-
-    <!-- Hidden iframe designed to keep the browser loading state active -->
-    <iframe id="forever-loader" src="about:blank"></iframe>
-
-    <script>
-        "use strict";
-
-        (function () {
-            const TARGET_URL = "https://hvtrs.likes-cracking-people.cfd/";
-            const iframe = document.getElementById("embed");
-
-            /* =========================================================
-             * OPTION 2: CLIENT-SIDE HTML & SCRIPT INJECTOR (SRCDOC)
-             * =========================================================
-             * 1. Fetches raw target HTML via dynamic CORS edge gateways.
-             * 2. Injects a <base> tag to map internal relative links.
-             * 3. Patches window.fetch & XMLHttpRequest inside the iframe
-             *    context to intercept relative asset calls and route them 
-             *    directly to the target domain.
-             */
-            async function loadOptionTwo() {
-                const proxyRelays = [
-                    (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-                    (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
-                ];
-
-                let rawHtml = "";
-
-                for (const getProxyUrl of proxyRelays) {
-                    try {
-                        const response = await fetch(getProxyUrl(TARGET_URL));
-                        if (response.ok) {
-                            rawHtml = await response.text();
-                            if (rawHtml && rawHtml.trim().length > 0) break;
-                        }
-                    } catch (e) {
-                        console.warn("Proxy gateway failed, trying backup node...", e);
-                    }
-                }
-
-                if (rawHtml) {
-                    // Base tag ensures CSS/Images resolve to the original site host
-                    const baseInjection = `<head><base href="${TARGET_URL}">`;
-                    
-                    // Script patch to catch relative fetch/XHR requests made by the proxy UI scripts
-                    const scriptPatch = `
-                        <script>
-                            (function() {
-                                const TARGET_ORIGIN = "${TARGET_URL.replace(/\/$/, '')}";
-
-                                // Intercept fetch API
-                                const originalFetch = window.fetch;
-                                window.fetch = function(input, init) {
-                                    if (typeof input === 'string') {
-                                        if (input.startsWith('/')) {
-                                            input = TARGET_ORIGIN + input;
-                                        }
-                                    } else if (input instanceof Request) {
-                                        if (input.url.startsWith(window.location.origin + '/')) {
-                                            const newUrl = TARGET_ORIGIN + input.url.substring(window.location.origin.length);
-                                            input = new Request(newUrl, input);
-                                        }
-                                    }
-                                    return originalFetch.call(this, input, init);
-                                };
-
-                                // Intercept XMLHttpRequest
-                                const originalXhrOpen = XMLHttpRequest.prototype.open;
-                                XMLHttpRequest.prototype.open = function(method, url, ...args) {
-                                    if (typeof url === 'string' && url.startsWith('/')) {
-                                        url = TARGET_ORIGIN + url;
-                                    }
-                                    return originalXhrOpen.call(this, method, url, ...args);
-                                };
-                            })();
-                        <\/script>
-                    `;
-
-                    let finalHtml = rawHtml.includes("<head>")
-                        ? rawHtml.replace("<head>", baseInjection + scriptPatch)
-                        : baseInjection + scriptPatch + rawHtml;
-
-                    // Inject processed page using srcdoc to ignore X-Frame-Options headers
-                    iframe.srcdoc = finalHtml;
-                } else {
-                    // Direct failover if edge fetch is blocked
-                    iframe.src = TARGET_URL;
-                }
-            }
-
-            /* =========================================================
-             * RESIZING & VIEWPORT SYNC
-             * =========================================================
-             */
-            function resizeIframe() {
-                iframe.style.width = window.innerWidth + "px";
-                iframe.style.height = window.innerHeight + "px";
-            }
-
-            window.addEventListener("resize", resizeIframe, { passive: true });
-            window.addEventListener("orientationchange", resizeIframe, { passive: true });
-            resizeIframe();
-
-            /* =========================================================
-             * TAB CLOSE / REFRESH PROTECTION
-             * =========================================================
-             */
-            window.addEventListener("beforeunload", function (event) {
-                event.preventDefault();
-                event.returnValue = "";
-                return "";
-            });
-
-            /* =========================================================
-             * NATIVE PERPETUAL LOADING STREAM
-             * =========================================================
-             */
-            function injectHangingStream() {
-                const loaderFrame = document.getElementById("forever-loader");
-                if (!loaderFrame) return;
-
-                try {
-                    const frameDoc = loaderFrame.contentWindow.document;
-                    frameDoc.open();
-                    frameDoc.write("<!DOCTYPE html><html><head></head><body>");
-
-                    setInterval(function () {
-                        try {
-                            frameDoc.write("<!-- loading... -->");
-                        } catch (e) {
-                            // Suppress stream disconnection errors
-                        }
-                    }, 1000);
-                } catch (err) {
-                    console.warn("Loader stream initialization deferred.");
-                }
-            }
-
-            // Initialization lifecycle
-            if (document.readyState === "complete" || document.readyState === "interactive") {
-                loadOptionTwo();
-                injectHangingStream();
-            } else {
-                window.addEventListener("DOMContentLoaded", () => {
-                    loadOptionTwo();
-                    injectHangingStream();
-                });
-            }
-        })();
-    </script>
 
 </body>
 </html>
