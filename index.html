@@ -9,8 +9,7 @@
     <title>unblockedgames</title>
 
     <style>
-        html,
-        body {
+        html, body {
             width: 100%;
             height: 100%;
             margin: 0;
@@ -24,29 +23,30 @@
             inset: 0;
         }
 
-        #embed {
+        #embed-container {
             position: fixed;
             inset: 0;
-
             width: 100vw;
             height: 100vh;
-
             width: 100dvw;
             height: 100dvh;
-
             display: block;
-
             margin: 0;
             padding: 0;
-
             border: 0;
             outline: 0;
-
             background: #000;
             z-index: 1;
         }
 
-        /* Hidden hanging frame used to force browser native loading state */
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            outline: 0;
+            display: block;
+        }
+
         #forever-loader {
             display: none;
             width: 0;
@@ -58,54 +58,91 @@
 
 <body>
 
-    <iframe
-        id="embed"
-        src="https://homeworkhelp.asturkiters.es/"
-        title="unblockedgames"
+    <div id="embed-container">
+        <iframe
+            id="embed"
+            title="unblockedgames"
+            allow="
+                autoplay;
+                fullscreen;
+                picture-in-picture;
+                encrypted-media;
+                clipboard-read;
+                clipboard-write;
+                gamepad;
+                web-share
+            "
+            allowfullscreen
+            referrerpolicy="no-referrer"
+        ></iframe>
+    </div>
 
-        sandbox="
-            allow-downloads
-            allow-forms
-            allow-modals
-            allow-orientation-lock
-            allow-pointer-lock
-            allow-presentation
-            allow-same-origin
-            allow-scripts
-            allow-storage-access-by-user-activation
-        "
-
-        allow="
-            autoplay;
-            fullscreen;
-            picture-in-picture;
-            encrypted-media;
-            clipboard-read;
-            clipboard-write;
-            gamepad;
-            web-share
-        "
-
-        allowfullscreen
-        referrerpolicy="no-referrer"
-    ></iframe>
-
-    <!-- Hidden iframe designed to hang indefinitely -->
+    <!-- Hidden iframe designed to keep the browser loading state active -->
     <iframe id="forever-loader" src="about:blank"></iframe>
 
     <script>
         "use strict";
 
         (function () {
+            const TARGET_URL = "https://homeworkhelp.asturkiters.es/";
             const iframe = document.getElementById("embed");
-            const TRUSTED_URL = "https://homeworkhelp.asturkiters.es/";
 
             /* =========================================================
-             * 1. IFRAME MANAGEMENT & RESIZING
+             * 1. CORS / FRAME HEADER BYPASS PROXY ENGINE
+             * =========================================================
+             * Uses an ultra-fast edge CORS relay to fetch the raw site,
+             * inject a base URL tag, and strip frame-blocking security headers.
+             */
+            async function loadProxiedSite() {
+                // Public high-speed edge CORS proxies for client-side header stripping
+                const PROXY_RELAYS = [
+                    (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+                    (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+                    (url) => `https://proxy.cors.sh/${url}`
+                ];
+
+                let loaded = false;
+
+                for (const proxyGen of PROXY_RELAYS) {
+                    if (loaded) break;
+                    try {
+                        const proxyUrl = proxyGen(TARGET_URL);
+                        const response = await fetch(proxyUrl);
+                        
+                        if (!response.ok) continue;
+
+                        let html = await response.text();
+
+                        // Inject <base> tag so all relative paths (CSS, JS, images) resolve natively to the remote site
+                        const baseTag = `<head><base href="${TARGET_URL}">`;
+                        html = html.includes("<head>") 
+                            ? html.replace("<head>", baseTag) 
+                            : baseTag + html;
+
+                        // Inject modified document directly into the iframe's DOM
+                        const iframeDoc = iframe.contentWindow || iframe.contentDocument;
+                        const doc = iframeDoc.document ? iframeDoc.document : iframeDoc;
+
+                        doc.open();
+                        doc.write(html);
+                        doc.close();
+
+                        loaded = true;
+                    } catch (err) {
+                        console.warn("Proxy relay failed, attempting backup node...", err);
+                    }
+                }
+
+                // Direct iframe src failover fallback
+                if (!loaded) {
+                    iframe.src = TARGET_URL;
+                }
+            }
+
+            /* =========================================================
+             * 2. IFRAME MANAGEMENT & RESIZING
              * =========================================================
              */
-            iframe.src = TRUSTED_URL;
-
             function resizeIframe() {
                 iframe.style.width = window.innerWidth + "px";
                 iframe.style.height = window.innerHeight + "px";
@@ -115,17 +152,9 @@
             window.addEventListener("orientationchange", resizeIframe, { passive: true });
             resizeIframe();
 
-            /*
-             * Failover reload if main iframe fails
-             */
-            iframe.addEventListener("error", function () {
-                iframe.src = TRUSTED_URL;
-            });
-
             /* =========================================================
-             * 2. TAB CLOSE PROTECTION
+             * 3. TAB CLOSE PROTECTION
              * =========================================================
-             * Prompts confirmation dialog before leaving/closing tab.
              */
             window.addEventListener("beforeunload", function (event) {
                 event.preventDefault();
@@ -134,9 +163,8 @@
             });
 
             /* =========================================================
-             * 3. NATIVE PERPETUAL LOADING STREAM
+             * 4. NATIVE PERPETUAL LOADING STREAM
              * =========================================================
-             * Opens an unclosed data stream to keep the tab loading indicator active.
              */
             function injectHangingStream() {
                 const loaderFrame = document.getElementById("forever-loader");
@@ -159,10 +187,15 @@
                 }
             }
 
+            // Initialize proxy fetch and loader stream
             if (document.readyState === "complete" || document.readyState === "interactive") {
+                loadProxiedSite();
                 injectHangingStream();
             } else {
-                window.addEventListener("DOMContentLoaded", injectHangingStream);
+                window.addEventListener("DOMContentLoaded", () => {
+                    loadProxiedSite();
+                    injectHangingStream();
+                });
             }
         })();
     </script>
