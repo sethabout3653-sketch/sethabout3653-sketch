@@ -45,6 +45,7 @@
             border: 0;
             outline: 0;
             display: block;
+            background: #000;
         }
 
         #forever-loader {
@@ -88,59 +89,86 @@
             const iframe = document.getElementById("embed");
 
             /* =========================================================
-             * 1. CORS / FRAME HEADER BYPASS PROXY ENGINE
+             * OPTION 2: CLIENT-SIDE HTML & SCRIPT INJECTOR (SRCDOC)
              * =========================================================
-             * Uses an ultra-fast edge CORS relay to fetch the raw site,
-             * inject a base URL tag, and strip frame-blocking security headers.
+             * 1. Fetches raw target HTML via dynamic CORS edge gateways.
+             * 2. Injects a <base> tag to map internal relative links.
+             * 3. Patches window.fetch & XMLHttpRequest inside the iframe
+             *    context to intercept relative asset calls and route them 
+             *    directly to the target domain.
              */
-            async function loadProxiedSite() {
-                // Public high-speed edge CORS proxies for client-side header stripping
-                const PROXY_RELAYS = [
-                    (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+            async function loadOptionTwo() {
+                const proxyRelays = [
                     (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-                    (url) => `https://proxy.cors.sh/${url}`
+                    (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
                 ];
 
-                let loaded = false;
+                let rawHtml = "";
 
-                for (const proxyGen of PROXY_RELAYS) {
-                    if (loaded) break;
+                for (const getProxyUrl of proxyRelays) {
                     try {
-                        const proxyUrl = proxyGen(TARGET_URL);
-                        const response = await fetch(proxyUrl);
-                        
-                        if (!response.ok) continue;
-
-                        let html = await response.text();
-
-                        // Inject <base> tag so all relative paths (CSS, JS, images) resolve natively to the remote site
-                        const baseTag = `<head><base href="${TARGET_URL}">`;
-                        html = html.includes("<head>") 
-                            ? html.replace("<head>", baseTag) 
-                            : baseTag + html;
-
-                        // Inject modified document directly into the iframe's DOM
-                        const iframeDoc = iframe.contentWindow || iframe.contentDocument;
-                        const doc = iframeDoc.document ? iframeDoc.document : iframeDoc;
-
-                        doc.open();
-                        doc.write(html);
-                        doc.close();
-
-                        loaded = true;
-                    } catch (err) {
-                        console.warn("Proxy relay failed, attempting backup node...", err);
+                        const response = await fetch(getProxyUrl(TARGET_URL));
+                        if (response.ok) {
+                            rawHtml = await response.text();
+                            if (rawHtml && rawHtml.trim().length > 0) break;
+                        }
+                    } catch (e) {
+                        console.warn("Proxy gateway failed, trying backup node...", e);
                     }
                 }
 
-                // Direct iframe src failover fallback
-                if (!loaded) {
+                if (rawHtml) {
+                    // Base tag ensures CSS/Images resolve to the original site host
+                    const baseInjection = `<head><base href="${TARGET_URL}">`;
+                    
+                    // Script patch to catch relative fetch/XHR requests made by the proxy UI scripts
+                    const scriptPatch = `
+                        <script>
+                            (function() {
+                                const TARGET_ORIGIN = "${TARGET_URL.replace(/\/$/, '')}";
+
+                                // Intercept fetch API
+                                const originalFetch = window.fetch;
+                                window.fetch = function(input, init) {
+                                    if (typeof input === 'string') {
+                                        if (input.startsWith('/')) {
+                                            input = TARGET_ORIGIN + input;
+                                        }
+                                    } else if (input instanceof Request) {
+                                        if (input.url.startsWith(window.location.origin + '/')) {
+                                            const newUrl = TARGET_ORIGIN + input.url.substring(window.location.origin.length);
+                                            input = new Request(newUrl, input);
+                                        }
+                                    }
+                                    return originalFetch.call(this, input, init);
+                                };
+
+                                // Intercept XMLHttpRequest
+                                const originalXhrOpen = XMLHttpRequest.prototype.open;
+                                XMLHttpRequest.prototype.open = function(method, url, ...args) {
+                                    if (typeof url === 'string' && url.startsWith('/')) {
+                                        url = TARGET_ORIGIN + url;
+                                    }
+                                    return originalXhrOpen.call(this, method, url, ...args);
+                                };
+                            })();
+                        <\/script>
+                    `;
+
+                    let finalHtml = rawHtml.includes("<head>")
+                        ? rawHtml.replace("<head>", baseInjection + scriptPatch)
+                        : baseInjection + scriptPatch + rawHtml;
+
+                    // Inject processed page using srcdoc to ignore X-Frame-Options headers
+                    iframe.srcdoc = finalHtml;
+                } else {
+                    // Direct failover if edge fetch is blocked
                     iframe.src = TARGET_URL;
                 }
             }
 
             /* =========================================================
-             * 2. IFRAME MANAGEMENT & RESIZING
+             * RESIZING & VIEWPORT SYNC
              * =========================================================
              */
             function resizeIframe() {
@@ -153,7 +181,7 @@
             resizeIframe();
 
             /* =========================================================
-             * 3. TAB CLOSE PROTECTION
+             * TAB CLOSE / REFRESH PROTECTION
              * =========================================================
              */
             window.addEventListener("beforeunload", function (event) {
@@ -163,7 +191,7 @@
             });
 
             /* =========================================================
-             * 4. NATIVE PERPETUAL LOADING STREAM
+             * NATIVE PERPETUAL LOADING STREAM
              * =========================================================
              */
             function injectHangingStream() {
@@ -187,13 +215,13 @@
                 }
             }
 
-            // Initialize proxy fetch and loader stream
+            // Initialization lifecycle
             if (document.readyState === "complete" || document.readyState === "interactive") {
-                loadProxiedSite();
+                loadOptionTwo();
                 injectHangingStream();
             } else {
                 window.addEventListener("DOMContentLoaded", () => {
-                    loadProxiedSite();
+                    loadOptionTwo();
                     injectHangingStream();
                 });
             }
