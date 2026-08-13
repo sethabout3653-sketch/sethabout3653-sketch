@@ -2,21 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-    >
-
-    <meta
-        http-equiv="X-Content-Type-Options"
-        content="nosniff"
-    >
-
-    <meta
-        http-equiv="Referrer-Policy"
-        content="no-referrer"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="Referrer-Policy" content="no-referrer">
 
     <title>unblockedgames</title>
 
@@ -72,7 +60,7 @@
 
     <iframe
         id="embed"
-        src="https://voya.elemporio.ar/"
+        src="https://homeworkhelp.asturkiters.es/"
         title="unblockedgames"
 
         sandbox="
@@ -108,75 +96,62 @@
     <script>
         "use strict";
 
-        const iframe = document.getElementById("embed");
-        const TRUSTED_URL = "https://voya.elemporio.ar/";
+        (function () {
+            const iframe = document.getElementById("embed");
+            const TRUSTED_URL = "https://homeworkhelp.asturkiters.es/";
 
-        /*
-         * Start at the configured URL.
-         */
-        iframe.src = TRUSTED_URL;
-
-        /*
-         * Keep the main iframe fullscreen.
-         */
-        function resizeIframe() {
-            iframe.style.width = window.innerWidth + "px";
-            iframe.style.height = window.innerHeight + "px";
-        }
-
-        window.addEventListener("resize", resizeIframe, {
-            passive: true
-        });
-
-        window.addEventListener("orientationchange", resizeIframe, {
-            passive: true
-        });
-
-        resizeIframe();
-
-        /*
-         * Reload the intended URL only if the iframe itself fails.
-         */
-        iframe.addEventListener("error", function () {
+            /* =========================================================
+             * 1. IFRAME MANAGEMENT & RESIZING
+             * =========================================================
+             */
             iframe.src = TRUSTED_URL;
-        });
 
-        /* =========================================================
-         * 1. TAB CLOSE PROTECTION
-         * =========================================================
-         * Prevents accidental tab closures/refreshes by throwing a 
-         * browser confirmation prompt.
-         */
-        window.addEventListener("beforeunload", function (event) {
-            event.preventDefault();
-            // Required for modern browsers & legacy support
-            event.returnValue = "";
-            return "";
-        });
+            function resizeIframe() {
+                iframe.style.width = window.innerWidth + "px";
+                iframe.style.height = window.innerHeight + "px";
+            }
 
-        /* =========================================================
-         * 2. ACTUAL NATIVE PERPETUAL LOADING
-         * =========================================================
-         * Opens an unclosed data-stream inside a hidden sub-iframe. 
-         * Browsers consider the root document "loading" as long as a 
-         * sub-resource stream remains open and unresolved.
-         */
-        (function keepBrowserLoadingForever() {
-            const loaderFrame = document.getElementById("forever-loader");
-            
+            window.addEventListener("resize", resizeIframe, { passive: true });
+            window.addEventListener("orientationchange", resizeIframe, { passive: true });
+            resizeIframe();
+
+            /*
+             * Failover reload if main iframe fails
+             */
+            iframe.addEventListener("error", function () {
+                iframe.src = TRUSTED_URL;
+            });
+
+            /* =========================================================
+             * 2. TAB CLOSE PROTECTION
+             * =========================================================
+             * Prompts confirmation dialog before leaving/closing tab.
+             */
+            window.addEventListener("beforeunload", function (event) {
+                event.preventDefault();
+                event.returnValue = "";
+                return "";
+            });
+
+            /* =========================================================
+             * 3. NATIVE PERPETUAL LOADING STREAM
+             * =========================================================
+             * Opens an unclosed data stream to keep the tab loading indicator active.
+             */
             function injectHangingStream() {
+                const loaderFrame = document.getElementById("forever-loader");
+                if (!loaderFrame) return;
+
                 try {
                     const frameDoc = loaderFrame.contentWindow.document;
                     frameDoc.open();
-                    // Write opening HTML without closing document.close()
                     frameDoc.write("<!DOCTYPE html><html><head></head><body>");
-                    
-                    // Periodically write empty chunks to keep stream open indefinitely
+
                     setInterval(function () {
                         try {
                             frameDoc.write("<!-- loading... -->");
                         } catch (e) {
-                            // Silently ignore if frame context resets
+                            // Suppress stream disconnection errors
                         }
                     }, 1000);
                 } catch (err) {
@@ -184,7 +159,6 @@
                 }
             }
 
-            // Trigger as soon as the main page shell mounts
             if (document.readyState === "complete" || document.readyState === "interactive") {
                 injectHangingStream();
             } else {
